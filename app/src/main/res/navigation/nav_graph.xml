@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/inicioFragment">
+
+    <fragment
+        android:id="@+id/inicioFragment"
+        android:name="es.iesagora.proyectopetconnect.InicioFragment"
+        android:label=""
+        tools:layout="@layout/fragment_inicio" >
+        <action
+            android:id="@+id/action_inicioFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_inicioFragment_to_registroFragment"
+            app:destination="@id/registroFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="es.iesagora.proyectopetconnect.LoginFragment"
+        android:label=""
+        tools:layout="@layout/fragment_login" >
+        <action
+            android:id="@+id/action_loginFragment_to_appFragment"
+            app:destination="@id/appFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/registroFragment"
+        android:name="es.iesagora.proyectopetconnect.RegistroFragment"
+        android:label=""
+        tools:layout="@layout/fragment_registro" >
+        <action
+            android:id="@+id/action_registroFragment_to_inicioFragment"
+            app:destination="@id/inicioFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/appFragment"
+        android:name="es.iesagora.proyectopetconnect.AppFragment"
+        android:label=""
+        tools:layout="@layout/fragment_app" />
+</navigation>
