@@ -21,18 +21,18 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.811" />
+        app:layout_constraintVertical_bias="0.90" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textInputLayoutNombre"
         android:layout_width="353dp"
-        android:layout_height="37dp"
+        android:layout_height="wrap_content"
         android:textColor="#0B0A0A"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.17">
+        app:layout_constraintVertical_bias="0.123">
 
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
@@ -45,13 +45,13 @@
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textInputLayoutApellidos"
         android:layout_width="353dp"
-        android:layout_height="37dp"
+        android:layout_height="wrap_content"
         android:textColor="#0B0A0A"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.27">
+        app:layout_constraintVertical_bias="0.25">
 
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
@@ -64,13 +64,13 @@
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textInputLayoutCorreo"
         android:layout_width="353dp"
-        android:layout_height="37dp"
+        android:layout_height="wrap_content"
         android:textColor="#0B0A0A"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.37">
+        app:layout_constraintVertical_bias="0.38">
 
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
@@ -83,18 +83,19 @@
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textInputLayoutPassword"
         android:layout_width="353dp"
-        android:layout_height="37dp"
+        android:layout_height="wrap_content"
         android:textColor="#0B0A0A"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.57">
+        app:layout_constraintVertical_bias="0.64">
 
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Contraseña"
+            android:inputType="textPassword"
             tools:layout_editor_absoluteX="1dp"
             tools:layout_editor_absoluteY="230dp" />
     </com.google.android.material.textfield.TextInputLayout>
@@ -102,13 +103,13 @@
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textInputLayoutUsuario"
         android:layout_width="353dp"
-        android:layout_height="37dp"
+        android:layout_height="wrap_content"
         android:textColor="#0B0A0A"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.47">
+        app:layout_constraintVertical_bias="0.51">
 
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
@@ -121,18 +122,19 @@
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textInputLayoutPasswordConfirmar"
         android:layout_width="353dp"
-        android:layout_height="37dp"
+        android:layout_height="wrap_content"
         android:textColor="#0B0A0A"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.67">
+        app:layout_constraintVertical_bias="0.77">
 
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Confirmar Contraseña"
+            android:inputType="textPassword"
             tools:layout_editor_absoluteX="1dp"
             tools:layout_editor_absoluteY="230dp" />
     </com.google.android.material.textfield.TextInputLayout>
