@@ -7,73 +7,77 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
-import com.google.gson.JsonObject;
-
-import api.RetrofitClient;
-import data.AuthResponse;
+import auth.AuthState;
+import auth.AuthViewModel;
 import es.iesagora.proyectopetconnect.databinding.FragmentLoginBinding;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class LoginFragment extends Fragment {
 
     private FragmentLoginBinding binding;
+    private AuthViewModel authViewModel;
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentLoginBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+
+        setupObservers();
+        setupClickListeners();
+    }
+
+    private void setupObservers() {
+        authViewModel.getAuthState().observe(getViewLifecycleOwner(), authState -> {
+            switch (authState.status) {
+                case LOADING:
+                    binding.button4.setEnabled(false);
+                    binding.button4.setText("Iniciando sesión...");
+                    break;
+                case SUCCESS:
+                    binding.button4.setEnabled(true);
+                    Toast.makeText(getContext(), "¡Login exitoso!", Toast.LENGTH_SHORT).show();
+                    Navigation.findNavController(requireView()).navigate(R.id.action_loginFragment_to_appFragment);
+                    break;
+                case ERROR:
+                    binding.button4.setEnabled(true);
+                    binding.button4.setText("Iniciar Sesion");
+                    Toast.makeText(getContext(), authState.message, Toast.LENGTH_LONG).show();
+                    break;
+            }
+        });
+    }
+
+    private void setupClickListeners() {
         binding.button4.setOnClickListener(v -> {
-
-            String email = binding.textInputLayoutUsuarioLogin.getEditText().getText().toString().trim();
-            String password = binding.textInputLayoutPasswordLogin.getEditText().getText().toString().trim();
-
-            if (email.isEmpty()) {
-                binding.textInputLayoutUsuarioLogin.setError("Ingrese su correo");
-                return;
+            String email = "";
+            if(binding.textInputLayoutUsuarioLogin.getEditText() != null) {
+                email = binding.textInputLayoutUsuarioLogin.getEditText().getText().toString().trim();
             }
 
-            if (password.isEmpty()) {
-                binding.textInputLayoutPasswordLogin.setError("Ingrese su contraseña");
-                return;
+            String password = "";
+            if(binding.textInputLayoutPasswordLogin.getEditText() != null) {
+                password = binding.textInputLayoutPasswordLogin.getEditText().getText().toString().trim();
             }
 
-            JsonObject loginData = new JsonObject();
-            loginData.addProperty("email", email);
-            loginData.addProperty("password", password);
-
-            binding.button4.setEnabled(false);
-
-            RetrofitClient.getApi().signIn(loginData).enqueue(new Callback<AuthResponse>() {
-                @Override
-                public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
-                    binding.button4.setEnabled(true);
-
-                    if (response.isSuccessful() && response.body() != null) {
-                        Toast.makeText(getContext(), "¡Bienvenido!", Toast.LENGTH_SHORT).show();
-
-
-                        Navigation.findNavController(v).navigate(R.id.action_loginFragment_to_appFragment);
-                    } else {
-                        Toast.makeText(getContext(), "Correo o contraseña incorrectos", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<AuthResponse> call, Throwable t) {
-                    binding.button4.setEnabled(true);
-                    Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
-                }
-            });
-
+            authViewModel.login(email, password);
         });
 
-        return binding.getRoot();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }

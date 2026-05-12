@@ -22,11 +22,11 @@ public class InicioFragment extends Fragment {
 
         binding = FragmentInicioBinding.inflate(inflater, container, false);
 
-        binding.button.setOnClickListener(v ->
+        binding.btnIniciarSesion.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(R.id.action_inicioFragment_to_loginFragment)
         );
 
-        binding.button2.setOnClickListener(v ->
+        binding.btnRegistrarse.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(R.id.action_inicioFragment_to_registroFragment)
         );
 

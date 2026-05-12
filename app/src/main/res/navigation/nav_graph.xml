@@ -51,5 +51,22 @@
         android:id="@+id/appFragment"
         android:name="es.iesagora.proyectopetconnect.AppFragment"
         android:label=""
-        tools:layout="@layout/fragment_app" />
+        tools:layout="@layout/fragment_app" >
+        <action
+            android:id="@+id/action_appFragment_to_ajustesFragment"
+            app:destination="@id/ajustesFragment" />
+        <action
+            android:id="@+id/action_appFragment_to_crearMascotaFragment"
+            app:destination="@id/crearMascotaFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/ajustesFragment"
+        android:name="es.iesagora.proyectopetconnect.AjustesFragment"
+        android:label="Ajustes"
+        tools:layout="@layout/fragment_ajustes" />
+    <fragment
+        android:id="@+id/crearMascotaFragment"
+        android:name="es.iesagora.proyectopetconnect.CrearMascotaFragment"
+        android:label="Mascota"
+        tools:layout="@layout/fragment_crear_mascota" />
 </navigation>

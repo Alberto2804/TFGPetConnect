@@ -22,6 +22,8 @@ import retrofit2.Response;
 
 public class RegistroFragment extends Fragment {
 
+    private sharedpreferences.PreferencesRepository preferencesRepository;
+
     private FragmentRegistroBinding binding;
 
     @Override
@@ -29,6 +31,8 @@ public class RegistroFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         binding = FragmentRegistroBinding.inflate(inflater, container, false);
+
+        preferencesRepository = new sharedpreferences.PreferencesRepository(requireContext());
 
         limpiarErrorAlEscribir(binding.textInputLayoutNombre);
         limpiarErrorAlEscribir(binding.textInputLayoutApellidos);
@@ -87,16 +91,18 @@ public class RegistroFragment extends Fragment {
 
             binding.button3.setEnabled(false);
 
+
             RetrofitClient.getApi().signUp(authData).enqueue(new Callback<AuthResponse>() {
                 @Override
                 public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
 
-
                         AuthResponse datosAuth = response.body();
                         String userId = datosAuth.getUser().getId();       // Sacamos el ID
                         String accessToken = datosAuth.getAccessToken();   // Sacamos el Token
 
+                        sharedpreferences.PreferencesRepository prefs = new sharedpreferences.PreferencesRepository(requireContext());
+                        prefs.guardarSesion(accessToken, userId);
 
                         guardarDatosEnBaseDeDatos(userId, accessToken, nombre, apellidos, usuario, correo, v);
 
