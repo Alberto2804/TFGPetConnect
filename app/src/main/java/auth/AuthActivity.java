@@ -1,10 +1,11 @@
-package es.iesagora.proyectopetconnect;
+package auth;
 
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
-import auth.AuthRepository;
+import es.iesagora.proyectopetconnect.MainActivity;
+import es.iesagora.proyectopetconnect.R;
 
 public class AuthActivity extends AppCompatActivity {
     @Override

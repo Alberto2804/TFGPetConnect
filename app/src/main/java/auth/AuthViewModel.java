@@ -62,4 +62,26 @@ public class AuthViewModel extends AndroidViewModel {
             }
         });
     }
+
+    // Añadir en AuthViewModel.java
+    public void loginWithGoogle(String idToken) {
+        if (idToken == null || idToken.isEmpty()) {
+            authState.setValue(AuthState.error("Token de Google no válido"));
+            return;
+        }
+
+        authState.setValue(AuthState.loading());
+
+        repo.loginWithGoogle(idToken, new AuthRepository.AuthCallback() {
+            @Override
+            public void onSuccess() {
+                authState.postValue(AuthState.success());
+            }
+
+            @Override
+            public void onError(String message) {
+                authState.postValue(AuthState.error(message));
+            }
+        });
+    }
 }

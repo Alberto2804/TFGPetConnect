@@ -74,6 +74,32 @@ public class AuthRepository {
         });
     }
 
+    // Añadir en AuthRepository.java
+    public void loginWithGoogle(String idToken, AuthCallback callback) {
+        JsonObject authData = new JsonObject();
+        authData.addProperty("provider", "google");
+        authData.addProperty("id_token", idToken);
+
+        RetrofitClient.getApi().loginWithGoogleToken(authData).enqueue(new Callback<AuthResponse>() {
+            @Override
+            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    AuthResponse datosAuth = response.body();
+                    // Guardamos la sesión igual que en el login normal
+                    prefsRepo.guardarSesion(datosAuth.getAccessToken(), datosAuth.getUser().getId());
+                    callback.onSuccess();
+                } else {
+                    callback.onError("Error de autenticación con Google");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AuthResponse> call, Throwable t) {
+                callback.onError("Error de red: " + t.getMessage());
+            }
+        });
+    }
+
     private void guardarDatosPerfil(String userId, String token, String nombre, String apellidos, String usuario, String correo, AuthCallback callback) {
         JsonObject userDbData = new JsonObject();
         userDbData.addProperty("id", userId);

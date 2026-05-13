@@ -112,7 +112,11 @@ public class RegistroFragment extends Fragment {
                 restaurarUI();
                 if (response.isSuccessful()) {
                     Toast.makeText(getContext(), "¡Bienvenido!", Toast.LENGTH_SHORT).show();
-                    Navigation.findNavController(requireView()).navigate(R.id.action_registroFragment_to_appFragment);
+
+                    // ¡NUEVO!: Viajamos a la MainActivity usando un Intent
+                    android.content.Intent intent = new android.content.Intent(requireContext(), MainActivity.class);
+                    startActivity(intent);
+                    requireActivity().finish(); // Cerramos el Registro
                 }
             }
 

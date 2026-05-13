@@ -100,10 +100,13 @@ public class LoginFragment extends Fragment {
                     break;
                 case SUCCESS:
                     binding.loginButton.setEnabled(true);
-                    binding.googleSignInButton.setEnabled(true);
                     binding.progressBar.setVisibility(View.GONE);
                     Toast.makeText(getContext(), "¡Login exitoso!", Toast.LENGTH_SHORT).show();
-                    Navigation.findNavController(requireView()).navigate(R.id.action_loginFragment_to_appFragment);
+
+                    // ¡NUEVO!: Viajamos a la MainActivity usando un Intent
+                    android.content.Intent intent = new android.content.Intent(requireContext(), MainActivity.class);
+                    startActivity(intent);
+                    requireActivity().finish(); // Cerramos el Login para que no pueda volver atrás
                     break;
                 case ERROR:
                     binding.loginButton.setEnabled(true);
