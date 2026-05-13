@@ -26,6 +26,12 @@ public interface SupabaseAPI {
     @POST("auth/v1/signup")
     Call<AuthResponse> signUp(@Body JsonObject credenciales);
 
+    // Añade esto dentro de SupabaseAPI
+    @POST("auth/v1/token?grant_type=id_token")
+    Call<data.AuthResponse> loginWithGoogleToken(
+            @Body com.google.gson.JsonObject body
+    );
+
     @Headers("Prefer: return=minimal")
     @POST("rest/v1/usuarios")
     Call<Void> crearUsuarioDB(

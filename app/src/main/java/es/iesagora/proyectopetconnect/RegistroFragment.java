@@ -1,5 +1,6 @@
 package es.iesagora.proyectopetconnect;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.view.LayoutInflater;
@@ -7,10 +8,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import com.bumptech.glide.Glide;
 import com.google.gson.JsonObject;
 
 import api.RetrofitClient;
@@ -23,154 +27,104 @@ import retrofit2.Response;
 public class RegistroFragment extends Fragment {
 
     private sharedpreferences.PreferencesRepository preferencesRepository;
-
     private FragmentRegistroBinding binding;
+    private Uri fotoSeleccionadaUri = null;
+
+    private final ActivityResultLauncher<String> selectorImagenLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    fotoSeleccionadaUri = uri;
+                    Glide.with(this).load(uri).circleCrop().into(binding.ivFotoPerfil);
+                }
+            }
+    );
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentRegistroBinding.inflate(inflater, container, false);
-
         preferencesRepository = new sharedpreferences.PreferencesRepository(requireContext());
 
-        limpiarErrorAlEscribir(binding.textInputLayoutNombre);
-        limpiarErrorAlEscribir(binding.textInputLayoutApellidos);
-        limpiarErrorAlEscribir(binding.textInputLayoutCorreo);
-        limpiarErrorAlEscribir(binding.textInputLayoutUsuario);
-        limpiarErrorAlEscribir(binding.textInputLayoutPassword);
-        limpiarErrorAlEscribir(binding.textInputLayoutPasswordConfirmar);
+        // Navegación
+        binding.loginTextView.setOnClickListener(v -> Navigation.findNavController(v).navigate(R.id.loginFragment));
+        binding.btnSeleccionarFoto.setOnClickListener(v -> selectorImagenLauncher.launch("image/*"));
 
-        binding.button3.setOnClickListener(v -> {
+        binding.registerButton.setOnClickListener(v -> {
+            String usuario = binding.usernameEditText.getText().toString().trim();
+            String correo = binding.emailEditText.getText().toString().trim();
+            String password = binding.passwordEditText.getText().toString().trim();
+            String password2 = binding.confirmPasswordEditText.getText().toString().trim();
 
+            // Validaciones básicas
+            if (usuario.isEmpty()) { Toast.makeText(getContext(), "Escriba un nombre de usuario", Toast.LENGTH_SHORT).show(); return; }
+            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) { Toast.makeText(getContext(), "Correo inválido", Toast.LENGTH_SHORT).show(); return; }
+            if (password.length() < 6) { Toast.makeText(getContext(), "Contraseña muy corta", Toast.LENGTH_SHORT).show(); return; }
+            if (!password.equals(password2)) { Toast.makeText(getContext(), "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show(); return; }
 
-            String nombre = binding.textInputLayoutNombre.getEditText().getText().toString().trim();
-            String apellidos = binding.textInputLayoutApellidos.getEditText().getText().toString().trim();
-            String correo = binding.textInputLayoutCorreo.getEditText().getText().toString().trim();
-            String usuario = binding.textInputLayoutUsuario.getEditText().getText().toString().trim();
-            String password = binding.textInputLayoutPassword.getEditText().getText().toString().trim();
-            String password2 = binding.textInputLayoutPasswordConfirmar.getEditText().getText().toString().trim();
-
-            if (nombre.isEmpty()) {
-                binding.textInputLayoutNombre.setError("Ingrese su nombre");
-                return;
-            }
-            if (apellidos.isEmpty()) {
-                binding.textInputLayoutApellidos.setError("Ingrese sus apellidos");
-                return;
-            }
-            if (correo.isEmpty()) {
-                binding.textInputLayoutCorreo.setError("Ingrese un correo");
-                return;
-            }
-            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
-                binding.textInputLayoutCorreo.setError("Correo inválido");
-                return;
-            }
-            if (usuario.isEmpty()) {
-                binding.textInputLayoutUsuario.setError("Ingrese un usuario");
-                return;
-            }
-            if (password.isEmpty()) {
-                binding.textInputLayoutPassword.setError("Ingrese una contraseña");
-                return;
-            }
-            if (password.length() < 6) {
-                binding.textInputLayoutPassword.setError("Mínimo 6 caracteres");
-                return;
-            }
-            if (!password.equals(password2)) {
-                binding.textInputLayoutPasswordConfirmar.setError("Las contraseñas no coinciden");
-                return;
-            }
-
-            JsonObject authData = new JsonObject();
-            authData.addProperty("email", correo);
-            authData.addProperty("password", password);
-
-
-            binding.button3.setEnabled(false);
-
-
-            RetrofitClient.getApi().signUp(authData).enqueue(new Callback<AuthResponse>() {
-                @Override
-                public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-
-                        AuthResponse datosAuth = response.body();
-                        String userId = datosAuth.getUser().getId();       // Sacamos el ID
-                        String accessToken = datosAuth.getAccessToken();   // Sacamos el Token
-
-                        sharedpreferences.PreferencesRepository prefs = new sharedpreferences.PreferencesRepository(requireContext());
-                        prefs.guardarSesion(accessToken, userId);
-
-                        guardarDatosEnBaseDeDatos(userId, accessToken, nombre, apellidos, usuario, correo, v);
-
-                    } else {
-                        binding.button3.setEnabled(true);
-                        Toast.makeText(getContext(), "Error en registro. ¿El correo ya existe?", Toast.LENGTH_LONG).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<AuthResponse> call, Throwable t) {
-                    binding.button3.setEnabled(true);
-                    Toast.makeText(getContext(), "Error de conexión: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
+            registrarEnAuth(usuario, correo, password);
         });
 
         return binding.getRoot();
     }
 
-    private void guardarDatosEnBaseDeDatos(String userId, String token, String nombre, String apellidos, String usuario, String correo, View view) {
+    private void registrarEnAuth(String usuario, String correo, String password) {
+        binding.registerButton.setEnabled(false);
+        binding.progressBar.setVisibility(View.VISIBLE);
 
-        JsonObject userDbData = new JsonObject();
-        userDbData.addProperty("id", userId);
-        userDbData.addProperty("nombre", nombre);
-        userDbData.addProperty("apellidos", apellidos);
-        userDbData.addProperty("usuario", usuario);
-        userDbData.addProperty("correo", correo);
+        JsonObject authData = new JsonObject();
+        authData.addProperty("email", correo);
+        authData.addProperty("password", password);
 
-        String authHeader = "Bearer " + token;
+        RetrofitClient.getApi().signUp(authData).enqueue(new Callback<AuthResponse>() {
+            @Override
+            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    String userId = response.body().getUser().getId();
+                    String token = response.body().getAccessToken();
 
-        RetrofitClient.getApi().crearUsuarioDB(authHeader, userDbData).enqueue(new Callback<Void>() {
+                    preferencesRepository.guardarSesion(token, userId);
+
+                    // Guardamos solo Usuario e ID en la tabla de perfiles
+                    guardarEnBaseDeDatos(userId, token, usuario, correo);
+                } else {
+                    restaurarUI();
+                    Toast.makeText(getContext(), "Error en el registro de autenticación", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AuthResponse> call, Throwable t) {
+                restaurarUI();
+                Toast.makeText(getContext(), "Error de red", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void guardarEnBaseDeDatos(String userId, String token, String usuario, String correo) {
+        JsonObject userData = new JsonObject();
+        userData.addProperty("id", userId);
+        userData.addProperty("usuario", usuario);
+        userData.addProperty("correo", correo);
+
+        RetrofitClient.getApi().crearUsuarioDB("Bearer " + token, userData).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                binding.button3.setEnabled(true);
-
+                restaurarUI();
                 if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), "¡Cuenta creada con éxito!", Toast.LENGTH_SHORT).show();
-                    Navigation.findNavController(view).navigate(R.id.action_registroFragment_to_appFragment);
-                } else {
-                    Toast.makeText(getContext(), "Usuario creado, pero falló al guardar datos del perfil.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "¡Bienvenido!", Toast.LENGTH_SHORT).show();
+                    Navigation.findNavController(requireView()).navigate(R.id.action_registroFragment_to_appFragment);
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                binding.button3.setEnabled(true);
-                Toast.makeText(getContext(), "Error de red al guardar perfil", Toast.LENGTH_SHORT).show();
+                restaurarUI();
             }
         });
     }
 
-    private void limpiarErrorAlEscribir(com.google.android.material.textfield.TextInputLayout layout) {
-        if (layout.getEditText() != null) {
-            layout.getEditText().addTextChangedListener(new android.text.TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (layout.getError() != null) {
-                        layout.setError(null);
-                    }
-                }
-
-                @Override
-                public void afterTextChanged(android.text.Editable s) { }
-            });
-        }
+    private void restaurarUI() {
+        binding.registerButton.setEnabled(true);
+        binding.progressBar.setVisibility(View.GONE);
     }
 }

@@ -36,6 +36,25 @@ public class AppFragment extends Fragment {
                 Navigation.findNavController(v).navigate(R.id.action_appFragment_to_ajustesFragment)
         );
 
+        binding.cardLugares.setOnClickListener(v -> {
+            // Creamos la búsqueda para Google Maps (geo:0,0 centra en la ubicación actual del usuario)
+            android.net.Uri gmmIntentUri = android.net.Uri.parse("geo:0,0?q=veterinarios, parques de perros");
+            android.content.Intent mapIntent = new android.content.Intent(android.content.Intent.ACTION_VIEW, gmmIntentUri);
+
+            // Forzamos a que intente abrir la app oficial de Google Maps
+            mapIntent.setPackage("com.google.android.apps.maps");
+
+            try {
+                // Intentamos abrir la app de Maps
+                startActivity(mapIntent);
+            } catch (android.content.ActivityNotFoundException e) {
+                // Si el usuario no tiene instalada la app de Google Maps, lo abrimos en el navegador web
+                android.net.Uri webUri = android.net.Uri.parse("https://www.google.com/maps/search/veterinarios,+parques+de+perros");
+                android.content.Intent webIntent = new android.content.Intent(android.content.Intent.ACTION_VIEW, webUri);
+                startActivity(webIntent);
+            }
+        });
+
         UserViewModel userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
         userViewModel.getPerfilUsuario().observe(getViewLifecycleOwner(), resource -> {
