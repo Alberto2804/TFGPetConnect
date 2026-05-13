@@ -2,12 +2,8 @@ package es.iesagora.proyectopetconnect;
 
 import android.os.Bundle;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -18,7 +14,7 @@ import sharedpreferences.PreferencesRepository;
 
 public class MainActivity extends AppCompatActivity {
 
-    ActivityMainBinding binding;
+    private ActivityMainBinding binding;
     private NavController navController;
     private AppBarConfiguration appBarConfiguration;
 
@@ -26,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
+        // 1. Configuración del Modo Oscuro
         PreferencesRepository prefs = new PreferencesRepository(this);
         if (prefs.isModoOscuro()) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
@@ -34,23 +30,32 @@ public class MainActivity extends AppCompatActivity {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
 
-        setContentView((binding = ActivityMainBinding.inflate(getLayoutInflater())).getRoot());
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        // 2. Configurar la Toolbar superior
         setSupportActionBar(binding.toolbar);
 
-        navController = ((NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment)).getNavController();
+        // 3. Obtener el Controlador de Navegación
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
 
-        if (!prefs.getToken().isEmpty()) {
-            navController.navigate(R.id.appFragment);
+        if (navHostFragment != null) {
+            navController = navHostFragment.getNavController();
         }
 
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+            appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
+            NavigationUI.setupWithNavController(binding.bottomNavView, navController);
+
+
+            // Vinculamos la barra superior (Toolbar) para que el título cambie automáticamente
+            NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+
     }
 
+    // Gestiona la flecha de ir hacia atrás en pantallas que no son las principales (ej. Ajustes)
     @Override
     public boolean onSupportNavigateUp() {
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
     }
-
 }

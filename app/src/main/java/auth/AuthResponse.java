@@ -1,6 +1,8 @@
-package data;
+package auth;
 
 import com.google.gson.annotations.SerializedName;
+
+import data.SupabaseUser;
 
 public class AuthResponse {
     @SerializedName("access_token")

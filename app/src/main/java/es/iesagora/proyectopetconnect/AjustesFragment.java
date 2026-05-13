@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 import api.Resource;
+import auth.AuthActivity;
 import es.iesagora.proyectopetconnect.databinding.FragmentAjustesBinding;
 import viewmodel.UserViewModel;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -145,12 +146,23 @@ public class AjustesFragment extends Fragment {
     }
 
     private void hacerLogout() {
+        // 1. Ejecutamos la lógica de tu ViewModel (si la tienes)
         userViewModel.hacerLogout();
-        Navigation.findNavController(requireView()).navigate(
-                R.id.loginFragment,
-                null,
-                new NavOptions.Builder().setPopUpTo(R.id.nav_graph, true).build()
-        );
+
+        // 2. Limpiamos los datos usando tu PreferencesRepository
+        sharedpreferences.PreferencesRepository prefs = new sharedpreferences.PreferencesRepository(requireContext());
+        prefs.cerrarSesion();
+
+        // 3. Viajamos a la AuthActivity (Pantalla de Login) con un Intent
+        android.content.Intent intent = new android.content.Intent(requireContext(), AuthActivity.class);
+
+        // 4. Estos Flags borran el historial para que el usuario no pueda darle al botón "Atrás"
+        intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        startActivity(intent);
+
+        // 5. Destruimos la MainActivity
+        requireActivity().finish();
     }
 
     private File uriToFile(Uri uri) {

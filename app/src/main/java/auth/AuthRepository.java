@@ -3,7 +3,6 @@ package auth;
 import android.content.Context;
 import com.google.gson.JsonObject;
 import api.RetrofitClient;
-import data.AuthResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -46,6 +45,35 @@ public class AuthRepository {
         });
     }
 
+    public void loginWithGoogle(String idToken, String nombreGoogle, String emailGoogle, AuthCallback callback) {
+        JsonObject authData = new JsonObject();
+        authData.addProperty("provider", "google");
+        authData.addProperty("id_token", idToken);
+
+        RetrofitClient.getApi().loginWithGoogleToken(authData).enqueue(new Callback<AuthResponse>() {
+            @Override
+            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    AuthResponse datosAuth = response.body();
+                    String userId = datosAuth.getUser().getId();
+                    String token = datosAuth.getAccessToken();
+
+                    prefsRepo.guardarSesion(token, userId);
+
+                    // Pasamos los datos de Google para crear el perfil
+                    guardarDatosPerfil(userId, token, nombreGoogle, emailGoogle, callback);
+                } else {
+                    callback.onError("Error de autenticación con Google");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AuthResponse> call, Throwable t) {
+                callback.onError("Error de red: " + t.getMessage());
+            }
+        });
+    }
+
     public void register(String nombre, String apellidos, String correo, String usuario, String password, AuthCallback callback) {
         JsonObject authData = new JsonObject();
         authData.addProperty("email", correo);
@@ -61,7 +89,8 @@ public class AuthRepository {
 
                     prefsRepo.guardarSesion(token, userId);
 
-                    guardarDatosPerfil(userId, token, nombre, apellidos, usuario, correo, callback);
+                    // Pasamos solo los datos necesarios
+                    guardarDatosPerfil(userId, token, usuario, correo, callback);
                 } else {
                     callback.onError("Error en registro. ¿El correo ya existe?");
                 }
@@ -74,37 +103,9 @@ public class AuthRepository {
         });
     }
 
-    // Añadir en AuthRepository.java
-    public void loginWithGoogle(String idToken, AuthCallback callback) {
-        JsonObject authData = new JsonObject();
-        authData.addProperty("provider", "google");
-        authData.addProperty("id_token", idToken);
-
-        RetrofitClient.getApi().loginWithGoogleToken(authData).enqueue(new Callback<AuthResponse>() {
-            @Override
-            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    AuthResponse datosAuth = response.body();
-                    // Guardamos la sesión igual que en el login normal
-                    prefsRepo.guardarSesion(datosAuth.getAccessToken(), datosAuth.getUser().getId());
-                    callback.onSuccess();
-                } else {
-                    callback.onError("Error de autenticación con Google");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<AuthResponse> call, Throwable t) {
-                callback.onError("Error de red: " + t.getMessage());
-            }
-        });
-    }
-
-    private void guardarDatosPerfil(String userId, String token, String nombre, String apellidos, String usuario, String correo, AuthCallback callback) {
+    private void guardarDatosPerfil(String userId, String token, String usuario, String correo, AuthCallback callback) {
         JsonObject userDbData = new JsonObject();
         userDbData.addProperty("id", userId);
-        userDbData.addProperty("nombre", nombre);
-        userDbData.addProperty("apellidos", apellidos);
         userDbData.addProperty("usuario", usuario);
         userDbData.addProperty("correo", correo);
 
@@ -113,10 +114,13 @@ public class AuthRepository {
         RetrofitClient.getApi().crearUsuarioDB(authHeader, userDbData).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
+                // LA MAGIA ESTÁ AQUÍ:
+                // response.isSuccessful() -> Se ha creado por primera vez.
+                // response.code() == 409 -> Da conflicto porque YA EXISTE (Usuario recurrente de Google). Ambos nos valen.
+                if (response.isSuccessful() || response.code() == 409) {
                     callback.onSuccess();
                 } else {
-                    callback.onError("Usuario creado, pero falló al guardar datos del perfil.");
+                    callback.onError("Fallo al guardar perfil. Código: " + response.code());
                 }
             }
 

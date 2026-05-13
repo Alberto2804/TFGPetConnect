@@ -22,4 +22,6 @@
     <string name="text_or_register_with">O regístrate con</string>
     <string name="question_yes_account">¿Ya tienes cuenta?</string>
     <string name="action_login">Inicia Sesión</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

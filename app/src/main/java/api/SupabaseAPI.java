@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 
 import java.util.List;
 
-import data.AuthResponse;
+import auth.AuthResponse;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -28,7 +28,7 @@ public interface SupabaseAPI {
 
     // Añade esto dentro de SupabaseAPI
     @POST("auth/v1/token?grant_type=id_token")
-    Call<data.AuthResponse> loginWithGoogleToken(
+    Call<AuthResponse> loginWithGoogleToken(
             @Body com.google.gson.JsonObject body
     );
 

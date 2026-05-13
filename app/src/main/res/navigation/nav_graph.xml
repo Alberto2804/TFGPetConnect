@@ -32,6 +32,11 @@
         android:name="es.iesagora.proyectopetconnect.CrearMascotaFragment"
         android:label="Mascota"
         tools:layout="@layout/fragment_crear_mascota" />
+    <fragment
+        android:id="@+id/comunidadFragment3"
+        android:name="es.iesagora.proyectopetconnect.ComunidadFragment"
+        android:label="fragment_comunidad"
+        tools:layout="@layout/fragment_comunidad" />
 
 
 </navigation>

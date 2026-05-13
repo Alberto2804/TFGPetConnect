@@ -76,14 +76,15 @@ public class LoginFragment extends Fragment {
                     if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                         Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
                         try {
-                            // Hemos iniciado sesión en Google correctamente en el móvil
                             GoogleSignInAccount account = task.getResult(ApiException.class);
                             String idToken = account.getIdToken();
+                            String nombre = account.getDisplayName(); // Nombre del usuario en Google
+                            String email = account.getEmail();       // Correo del usuario en Google
 
-                            // Ahora mandamos ese Token a Supabase
-                            authViewModel.loginWithGoogle(idToken);
+                            // Le pasamos el token y los datos para que cree el perfil
+                            authViewModel.loginWithGoogle(idToken, nombre, email);
                         } catch (ApiException e) {
-                            Toast.makeText(getContext(), "Error Google: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Error Google", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
@@ -128,8 +129,12 @@ public class LoginFragment extends Fragment {
 
         // Clic en Google
         binding.googleSignInButton.setOnClickListener(v -> {
-            Intent signInIntent = googleClient.getSignInIntent();
-            googleLauncher.launch(signInIntent);
+            // 1. Forzamos a Google a "cerrar sesión" internamente
+            googleClient.signOut().addOnCompleteListener(requireActivity(), task -> {
+                // 2. Una vez limpia la caché, abrimos el selector de cuentas
+                Intent signInIntent = googleClient.getSignInIntent();
+                googleLauncher.launch(signInIntent);
+            });
         });
 
         // Ir a Registro

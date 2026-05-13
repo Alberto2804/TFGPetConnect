@@ -1,8 +1,9 @@
 package es.iesagora.proyectopetconnect;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,25 +12,29 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
-import com.google.gson.JsonObject;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 
-import api.RetrofitClient;
-import data.AuthResponse;
+import auth.AuthViewModel;
 import es.iesagora.proyectopetconnect.databinding.FragmentRegistroBinding;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class RegistroFragment extends Fragment {
 
-    private sharedpreferences.PreferencesRepository preferencesRepository;
     private FragmentRegistroBinding binding;
-    private Uri fotoSeleccionadaUri = null;
+    private AuthViewModel authViewModel;
 
+    // --- Variables para la Foto ---
+    private Uri fotoSeleccionadaUri = null;
     private final ActivityResultLauncher<String> selectorImagenLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(),
             uri -> {
@@ -40,95 +45,129 @@ public class RegistroFragment extends Fragment {
             }
     );
 
+    // --- Variables para Google Sign In ---
+    private GoogleSignInClient googleClient;
+    private ActivityResultLauncher<Intent> googleLauncher;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+
+        // 1. Inicializamos el launcher de Google
+        inicializarLauncherGoogleSignIn();
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentRegistroBinding.inflate(inflater, container, false);
-        preferencesRepository = new sharedpreferences.PreferencesRepository(requireContext());
-
-        // Navegación
-        binding.loginTextView.setOnClickListener(v -> Navigation.findNavController(v).navigate(R.id.loginFragment));
-        binding.btnSeleccionarFoto.setOnClickListener(v -> selectorImagenLauncher.launch("image/*"));
-
-        binding.registerButton.setOnClickListener(v -> {
-            String usuario = binding.usernameEditText.getText().toString().trim();
-            String correo = binding.emailEditText.getText().toString().trim();
-            String password = binding.passwordEditText.getText().toString().trim();
-            String password2 = binding.confirmPasswordEditText.getText().toString().trim();
-
-            // Validaciones básicas
-            if (usuario.isEmpty()) { Toast.makeText(getContext(), "Escriba un nombre de usuario", Toast.LENGTH_SHORT).show(); return; }
-            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) { Toast.makeText(getContext(), "Correo inválido", Toast.LENGTH_SHORT).show(); return; }
-            if (password.length() < 6) { Toast.makeText(getContext(), "Contraseña muy corta", Toast.LENGTH_SHORT).show(); return; }
-            if (!password.equals(password2)) { Toast.makeText(getContext(), "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show(); return; }
-
-            registrarEnAuth(usuario, correo, password);
-        });
-
         return binding.getRoot();
     }
 
-    private void registrarEnAuth(String usuario, String correo, String password) {
-        binding.registerButton.setEnabled(false);
-        binding.progressBar.setVisibility(View.VISIBLE);
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        JsonObject authData = new JsonObject();
-        authData.addProperty("email", correo);
-        authData.addProperty("password", password);
+        // 2. Configuramos el cliente de Google
+        configurarGoogleSignIn();
 
-        RetrofitClient.getApi().signUp(authData).enqueue(new Callback<AuthResponse>() {
-            @Override
-            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String userId = response.body().getUser().getId();
-                    String token = response.body().getAccessToken();
+        // 3. Observamos los estados (Cargando, Éxito, Error)
+        setupObservers();
 
-                    preferencesRepository.guardarSesion(token, userId);
+        // --- CLICKS EN BOTONES ---
 
-                    // Guardamos solo Usuario e ID en la tabla de perfiles
-                    guardarEnBaseDeDatos(userId, token, usuario, correo);
-                } else {
-                    restaurarUI();
-                    Toast.makeText(getContext(), "Error en el registro de autenticación", Toast.LENGTH_SHORT).show();
-                }
-            }
+        // Volver al Login
+        binding.loginTextView.setOnClickListener(v -> Navigation.findNavController(v).navigate(R.id.loginFragment));
 
-            @Override
-            public void onFailure(Call<AuthResponse> call, Throwable t) {
-                restaurarUI();
-                Toast.makeText(getContext(), "Error de red", Toast.LENGTH_SHORT).show();
-            }
+        // Elegir Foto
+        binding.btnSeleccionarFoto.setOnClickListener(v -> selectorImagenLauncher.launch("image/*"));
+
+        // Registro Normal por Correo
+        binding.registerButton.setOnClickListener(v -> {
+            String usuario = binding.usernameEditText.getText() != null ? binding.usernameEditText.getText().toString().trim() : "";
+            String correo = binding.emailEditText.getText() != null ? binding.emailEditText.getText().toString().trim() : "";
+            String password = binding.passwordEditText.getText() != null ? binding.passwordEditText.getText().toString().trim() : "";
+            String passwordConfirmar = binding.confirmPasswordEditText.getText() != null ? binding.confirmPasswordEditText.getText().toString().trim() : "";
+
+            // NOTA: Como quitamos nombre y apellidos del XML, le pasamos "N/A" para que tu AuthViewModel no de error de validación
+            authViewModel.register("N/A", "N/A", correo, usuario, password, passwordConfirmar);
+        });
+
+        // ¡EL BOTÓN DE GOOGLE AHORA SÍ FUNCIONA!
+        binding.googleSignInButton.setOnClickListener(v -> {
+            // 1. Forzamos a Google a "cerrar sesión" internamente
+            googleClient.signOut().addOnCompleteListener(requireActivity(), task -> {
+                // 2. Una vez limpia la caché, abrimos el selector de cuentas
+                Intent signInIntent = googleClient.getSignInIntent();
+                googleLauncher.launch(signInIntent);
+            });
         });
     }
 
-    private void guardarEnBaseDeDatos(String userId, String token, String usuario, String correo) {
-        JsonObject userData = new JsonObject();
-        userData.addProperty("id", userId);
-        userData.addProperty("usuario", usuario);
-        userData.addProperty("correo", correo);
+    private void configurarGoogleSignIn() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        googleClient = GoogleSignIn.getClient(requireActivity(), gso);
+    }
 
-        RetrofitClient.getApi().crearUsuarioDB("Bearer " + token, userData).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                restaurarUI();
-                if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), "¡Bienvenido!", Toast.LENGTH_SHORT).show();
+    private void inicializarLauncherGoogleSignIn() {
+        googleLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+                        try {
+                            GoogleSignInAccount account = task.getResult(ApiException.class);
+                            String idToken = account.getIdToken();
+                            String nombre = account.getDisplayName(); // Nombre del usuario en Google
+                            String email = account.getEmail();       // Correo del usuario en Google
 
-                    // ¡NUEVO!: Viajamos a la MainActivity usando un Intent
-                    android.content.Intent intent = new android.content.Intent(requireContext(), MainActivity.class);
+                            // Le pasamos el token y los datos para que cree el perfil
+                            authViewModel.loginWithGoogle(idToken, nombre, email);
+                        } catch (ApiException e) {
+                            Toast.makeText(getContext(), "Error Google", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+        );
+    }
+
+    private void setupObservers() {
+        authViewModel.getAuthState().observe(getViewLifecycleOwner(), authState -> {
+            switch (authState.status) {
+                case LOADING:
+                    binding.registerButton.setEnabled(false);
+                    binding.googleSignInButton.setEnabled(false);
+                    binding.progressBar.setVisibility(View.VISIBLE);
+                    break;
+
+                case SUCCESS:
+                    binding.registerButton.setEnabled(true);
+                    binding.googleSignInButton.setEnabled(true);
+                    binding.progressBar.setVisibility(View.GONE);
+                    Toast.makeText(getContext(), "¡Cuenta creada con éxito!", Toast.LENGTH_SHORT).show();
+
+                    // Viajamos a la App Principal y cerramos la pantalla de Auth
+                    Intent intent = new Intent(requireContext(), MainActivity.class);
                     startActivity(intent);
-                    requireActivity().finish(); // Cerramos el Registro
-                }
-            }
+                    requireActivity().finish();
+                    break;
 
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                restaurarUI();
+                case ERROR:
+                    binding.registerButton.setEnabled(true);
+                    binding.googleSignInButton.setEnabled(true);
+                    binding.progressBar.setVisibility(View.GONE);
+                    Toast.makeText(getContext(), authState.message, Toast.LENGTH_LONG).show();
+                    break;
             }
         });
     }
 
-    private void restaurarUI() {
-        binding.registerButton.setEnabled(true);
-        binding.progressBar.setVisibility(View.GONE);
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }
