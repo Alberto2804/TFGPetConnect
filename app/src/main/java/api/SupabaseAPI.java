@@ -74,6 +74,16 @@ public interface SupabaseAPI {
             @Query("select") String columnas
     );
 
+    // --- CHAT DE COMUNIDAD ---
+    @retrofit2.http.GET("comunidad?select=*&order=created_at.asc")
+    retrofit2.Call<java.util.List<comunidad.Mensaje>> getMensajesChat(@retrofit2.http.Header("Authorization") String token);
+
+    @retrofit2.http.POST("comunidad")
+    retrofit2.Call<Void> enviarMensajeChat(
+            @retrofit2.http.Header("Authorization") String token,
+            @retrofit2.http.Body comunidad.Mensaje mensaje
+    );
+
     @Headers("Prefer: return=minimal")
     @POST("rest/v1/mascotas")
     Call<Void> crearMascotaDB(

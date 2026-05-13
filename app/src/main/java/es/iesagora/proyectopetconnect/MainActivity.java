@@ -43,13 +43,11 @@ public class MainActivity extends AppCompatActivity {
             navController = navHostFragment.getNavController();
         }
 
-            appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-            NavigationUI.setupWithNavController(binding.bottomNavView, navController);
-
+            appBarConfiguration = new AppBarConfiguration.Builder(binding.bottomNavView.getMenu()).build();
 
             // Vinculamos la barra superior (Toolbar) para que el título cambie automáticamente
             NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
+            NavigationUI.setupWithNavController(binding.bottomNavView, navController);
     }
 
     // Gestiona la flecha de ir hacia atrás en pantallas que no son las principales (ej. Ajustes)
