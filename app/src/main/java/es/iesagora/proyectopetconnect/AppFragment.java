@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,14 +14,20 @@ import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.google.gson.JsonObject;
+
+import java.util.List;
 
 import api.Resource;
 import es.iesagora.proyectopetconnect.databinding.FragmentAppBinding;
+import sharedpreferences.PreferencesRepository;
 import viewmodel.UserViewModel;
 
 public class AppFragment extends Fragment {
 
     private FragmentAppBinding binding;
+    private UserViewModel userViewModel;
+    private PreferencesRepository prefs;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -32,92 +39,129 @@ public class AppFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        prefs = new PreferencesRepository(requireContext());
+
+        // 1. Configurar botones básicos
         binding.btnSettings.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(R.id.action_appFragment_to_ajustesFragment)
         );
 
-        binding.cardLugares.setOnClickListener(v -> {
-            // Creamos la búsqueda para Google Maps (geo:0,0 centra en la ubicación actual del usuario)
-            android.net.Uri gmmIntentUri = android.net.Uri.parse("geo:0,0?q=veterinarios, parques de perros");
-            android.content.Intent mapIntent = new android.content.Intent(android.content.Intent.ACTION_VIEW, gmmIntentUri);
+        binding.cardLugares.setOnClickListener(v -> abrirGoogleMaps());
 
-            // Forzamos a que intente abrir la app oficial de Google Maps
-            mapIntent.setPackage("com.google.android.apps.maps");
-
-            try {
-                // Intentamos abrir la app de Maps
-                startActivity(mapIntent);
-            } catch (android.content.ActivityNotFoundException e) {
-                // Si el usuario no tiene instalada la app de Google Maps, lo abrimos en el navegador web
-                android.net.Uri webUri = android.net.Uri.parse("https://www.google.com/maps/search/veterinarios,+parques+de+perros");
-                android.content.Intent webIntent = new android.content.Intent(android.content.Intent.ACTION_VIEW, webUri);
-                startActivity(webIntent);
-            }
-        });
-
-        UserViewModel userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
-
+        // 2. Observar el perfil del usuario (Nombre)
         userViewModel.getPerfilUsuario().observe(getViewLifecycleOwner(), resource -> {
-            if (resource != null && resource.status == api.Resource.Status.SUCCESS) {
-                if (resource.data != null && resource.data.has("usuario") && !resource.data.get("usuario").isJsonNull()) {
-
-                    String nombreUsuario = resource.data.get("usuario").getAsString();
-
-                    binding.tvNombre.setText(nombreUsuario);
+            if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                if (resource.data.has("usuario") && !resource.data.get("usuario").isJsonNull()) {
+                    binding.tvNombre.setText(resource.data.get("usuario").getAsString());
                 }
             }
         });
-        userViewModel.getMascota().observe(getViewLifecycleOwner(), resource -> {
-            if (resource != null && resource.status == Resource.Status.SUCCESS) {
 
-                if (resource.data != null) {
-                    binding.btnCrearMascota.setVisibility(View.GONE);
-                    binding.cardPerfilMascota.setVisibility(View.VISIBLE);
+        // 3. Lógica Multimascota: Observar la lista completa
+        cargarMascotas();
+    }
 
-                    String nombreMascota = resource.data.has("nombre") && !resource.data.get("nombre").isJsonNull() ? resource.data.get("nombre").getAsString() : "";
-                    String razaMascota = resource.data.has("raza") && !resource.data.get("raza").isJsonNull() ? resource.data.get("raza").getAsString() : "";
-                    String edadMascota = resource.data.has("edad") && !resource.data.get("edad").isJsonNull() ? resource.data.get("edad").getAsString() : "";
-                    String userId = resource.data.get("user_id").getAsString();
+    private void cargarMascotas() {
+        userViewModel.getMascotas().observe(getViewLifecycleOwner(), resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                List<JsonObject> listaMascotas = resource.data;
 
-                    binding.tvNombreMascota.setText(nombreMascota);
-                    binding.tvRazaEdad.setText(razaMascota + " • " + edadMascota + " años");
-
-                    String urlBase = "https://evrsywohqxoehdnbhpkg.supabase.co"; // Tu URL de Supabase
-                    String urlFotoMascota = urlBase + "/storage/v1/object/public/mascotas/" + userId + ".jpg?t=" + System.currentTimeMillis();
-
-                    Glide.with(this)
-                            .load(urlFotoMascota)
-                            .centerCrop()
-                            .error(R.drawable.goldenretriever)
-                            .skipMemoryCache(true)
-                            .diskCacheStrategy(DiskCacheStrategy.NONE)
-                            .into(binding.imgMascota);
-
-                    binding.cardPerfilMascota.setClickable(true);
-                    binding.cardPerfilMascota.setFocusable(true);
-
-                    binding.cardPerfilMascota.setOnClickListener(v -> {
-                        Bundle bundle = new Bundle();
-                        bundle.putString("nombre", nombreMascota);
-                        bundle.putString("raza", razaMascota);
-                        bundle.putString("edad", edadMascota);
-                        bundle.putString("urlFoto", urlFotoMascota);
-
-                        Navigation.findNavController(v).navigate(R.id.action_appFragment_to_crearMascotaFragment, bundle);
-                    });
-
-                } else {
-
+                if (listaMascotas.isEmpty()) {
+                    // Si no hay mascotas, mostramos el botón de añadir
                     binding.cardPerfilMascota.setVisibility(View.GONE);
                     binding.btnCrearMascota.setVisibility(View.VISIBLE);
-
                     binding.btnCrearMascota.setOnClickListener(v ->
                             Navigation.findNavController(v).navigate(R.id.action_appFragment_to_crearMascotaFragment)
                     );
+                } else {
+                    // Si hay mascotas, gestionamos la "Activa"
+                    binding.btnCrearMascota.setVisibility(View.GONE);
+                    binding.cardPerfilMascota.setVisibility(View.VISIBLE);
+
+                    String activaId = prefs.getMascotaActivaId();
+                    JsonObject mascotaAMostrar = listaMascotas.get(0); // Por defecto la primera
+
+                    // Buscamos si la mascota activa está en la lista descargada
+                    if (activaId != null) {
+                        for (JsonObject m : listaMascotas) {
+                            if (m.get("id").getAsString().equals(activaId)) {
+                                mascotaAMostrar = m;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Guardamos/Actualizamos el ID en preferencias por si acaso
+                    prefs.guardarMascotaActivaId(mascotaAMostrar.get("id").getAsString());
+
+                    // Pintamos los datos en la UI
+                    pintarMascotaEnTarjeta(mascotaAMostrar);
+
+                    // Al hacer clic, abrimos el selector de mascotas
+                    binding.cardPerfilMascota.setOnClickListener(v -> mostrarSelectorMascotas(listaMascotas));
                 }
             }
         });
+    }
 
+    private void pintarMascotaEnTarjeta(JsonObject mascota) {
+        String nombre = mascota.has("nombre") ? mascota.get("nombre").getAsString() : "Sin nombre";
+        String raza = mascota.has("raza") ? mascota.get("raza").getAsString() : "";
+        String edad = mascota.has("edad") ? mascota.get("edad").getAsString() : "";
+        String userId = mascota.get("user_id").getAsString();
+
+        binding.tvNombreMascota.setText(nombre);
+        binding.tvRazaEdad.setText(raza + " • " + edad + " años");
+
+        String urlFoto = "https://evrsywohqxoehdnbhpkg.supabase.co/storage/v1/object/public/mascotas/" + userId + ".jpg?t=" + System.currentTimeMillis();
+
+        Glide.with(this)
+                .load(urlFoto)
+                .centerCrop()
+                .error(R.drawable.goldenretriever)
+                .skipMemoryCache(true)
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .into(binding.imgMascota);
+    }
+
+    private void mostrarSelectorMascotas(List<JsonObject> listaMascotas) {
+        String[] opciones = new String[listaMascotas.size() + 1];
+        for (int i = 0; i < listaMascotas.size(); i++) {
+            opciones[i] = listaMascotas.get(i).get("nombre").getAsString();
+        }
+        opciones[listaMascotas.size()] = "+ Añadir nueva mascota";
+
+        new android.app.AlertDialog.Builder(requireContext())
+                .setTitle("Cambiar mascota")
+                .setItems(opciones, (dialog, which) -> {
+                    if (which == listaMascotas.size()) {
+                        // Navegar a crear nueva
+                        Navigation.findNavController(requireView()).navigate(R.id.action_appFragment_to_crearMascotaFragment);
+                    } else {
+                        // Cambiar activa y refrescar
+                        String nuevoId = listaMascotas.get(which).get("id").getAsString();
+                        prefs.guardarMascotaActivaId(nuevoId);
+
+                        // Refresco visual rápido de la tarjeta
+                        pintarMascotaEnTarjeta(listaMascotas.get(which));
+                        Toast.makeText(getContext(), "Mascota cambiada a " + opciones[which], Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show();
+    }
+
+    private void abrirGoogleMaps() {
+        android.net.Uri gmmIntentUri = android.net.Uri.parse("geo:0,0?q=veterinarios, parques de perros");
+        android.content.Intent mapIntent = new android.content.Intent(android.content.Intent.ACTION_VIEW, gmmIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+
+        try {
+            startActivity(mapIntent);
+        } catch (android.content.ActivityNotFoundException e) {
+            android.net.Uri webUri = android.net.Uri.parse("http://maps.google.com/maps?q=veterinarios,parques");
+            startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, webUri));
+        }
     }
 
     @Override

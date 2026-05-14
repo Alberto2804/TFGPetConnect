@@ -10,6 +10,8 @@ public class PreferencesRepository {
 
     private static final String KEY_DARK_MODE = "tema_oscuro";
 
+    private static final String KEY_MASCOTA_ACTIVA = "mascota_activa_id";
+
     private final SharedPreferences prefs;
 
     public PreferencesRepository(Context context) {
@@ -34,6 +36,14 @@ public class PreferencesRepository {
 
     public String getUserId() {
         return prefs.getString(KEY_USER_ID, "");
+    }
+
+    public void guardarMascotaActivaId(String mascotaId) {
+        prefs.edit().putString(KEY_MASCOTA_ACTIVA, mascotaId).apply();
+    }
+
+    public String getMascotaActivaId() {
+        return prefs.getString(KEY_MASCOTA_ACTIVA, null); // Devuelve null si no hay ninguna
     }
 
     public void cerrarSesion() {

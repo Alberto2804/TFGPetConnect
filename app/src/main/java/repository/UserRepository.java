@@ -97,8 +97,8 @@ public class UserRepository {
         return resultado;
     }
 
-    public LiveData<Resource<com.google.gson.JsonObject>> obtenerMascota(String token, String userId) {
-        MutableLiveData<Resource<com.google.gson.JsonObject>> resultado = new MutableLiveData<>();
+    public LiveData<Resource<List<com.google.gson.JsonObject>>> obtenerMascotas(String token, String userId) {
+        MutableLiveData<Resource<List<com.google.gson.JsonObject>>> resultado = new MutableLiveData<>();
         resultado.setValue(Resource.loading(null));
 
         String filtroUserId = "eq." + userId;
@@ -106,10 +106,11 @@ public class UserRepository {
         supabaseAPI.obtenerMascota("Bearer " + token, filtroUserId, "*").enqueue(new retrofit2.Callback<java.util.List<com.google.gson.JsonObject>>() {
             @Override
             public void onResponse(retrofit2.Call<java.util.List<com.google.gson.JsonObject>> call, retrofit2.Response<java.util.List<com.google.gson.JsonObject>> response) {
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    resultado.setValue(Resource.success(response.body().get(0)));
+                if (response.isSuccessful() && response.body() != null) {
+                    // Agora retornamos a lista completa de animais
+                    resultado.setValue(Resource.success(response.body()));
                 } else {
-                    resultado.setValue(Resource.success(null));
+                    resultado.setValue(Resource.success(new java.util.ArrayList<>()));
                 }
             }
 

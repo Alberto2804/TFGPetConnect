@@ -10,6 +10,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.google.gson.JsonObject;
 
 import java.io.File;
+import java.util.List;
 
 import api.Resource;
 import repository.UserRepository;
@@ -62,10 +63,10 @@ public class UserViewModel extends AndroidViewModel {
         return userRepository.actualizarNombre(token, userId, nuevoNombre);
     }
 
-    public LiveData<Resource<com.google.gson.JsonObject>> getMascota() {
+    public LiveData<Resource<List<JsonObject>>> getMascotas() {
         String token = prefsRepo.getToken();
         String userId = prefsRepo.getUserId();
-        return userRepository.obtenerMascota(token, userId);
+        return userRepository.obtenerMascotas(token, userId);
     }
 
     public LiveData<Resource<Void>> guardarMascota(String nombre, String raza, String edad) {
@@ -85,6 +86,14 @@ public class UserViewModel extends AndroidViewModel {
         String token = prefsRepo.getToken();
         String userId = prefsRepo.getUserId();
         return userRepository.actualizarMascota(token, userId, nombre, raza, edad);
+    }
+
+    public void setMascotaActiva(String mascotaId) {
+        prefsRepo.guardarMascotaActivaId(mascotaId);
+    }
+
+    public String getMascotaActivaId() {
+        return prefsRepo.getMascotaActivaId();
     }
 
     public void setModoOscuro(boolean isOscuro) {

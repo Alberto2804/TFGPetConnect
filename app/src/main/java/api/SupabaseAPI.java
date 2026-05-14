@@ -74,7 +74,6 @@ public interface SupabaseAPI {
             @Query("select") String columnas
     );
 
-    // --- CHAT DE COMUNIDAD ---
 
     // --- CHAT DE COMUNIDAD ---
     @retrofit2.http.GET("rest/v1/comunidad?select=*&order=created_at.desc")
@@ -103,5 +102,19 @@ public interface SupabaseAPI {
             @Header("Authorization") String token,
             @Query("user_id") String filtroUserId,
             @Body com.google.gson.JsonObject datosActualizados
+    );
+
+    @GET("rest/v1/historial_clinico")
+    Call<List<historial_clinico.HistorialMedico>> obtenerHistorialMascota(
+            @Header("Authorization") String token,
+            @Query("mascota_id") String filtroMascotaId,
+            @Query("select") String columnas
+    );
+
+    @Headers("Prefer: return=minimal")
+    @POST("rest/v1/historial_clinico")
+    Call<Void> insertarRegistroMedico(
+            @Header("Authorization") String token,
+            @Body historial_clinico.HistorialMedico nuevoRegistro
     );
 }

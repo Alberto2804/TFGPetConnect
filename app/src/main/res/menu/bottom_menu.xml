@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/ajustesFragment"
+        android:id="@+id/historialMedicoFragment"
         android:icon="@android:drawable/ic_menu_recent_history"
-        android:title="Próximamente" />
+        android:title="Historial Medico" />
 
     <item
         android:id="@+id/appFragment"

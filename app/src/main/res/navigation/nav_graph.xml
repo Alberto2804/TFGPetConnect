@@ -16,8 +16,6 @@
         <action
             android:id="@+id/action_appFragment_to_crearMascotaFragment"
             app:destination="@id/crearMascotaFragment" />
-        <action
-            android:id="@+id/action_appFragment_to_perfilMascotaFragment"></action>
 
     </fragment>
 
@@ -37,6 +35,20 @@
         android:name="comunidad.ComunidadFragment"
         android:label="Comunidad"
         tools:layout="@layout/fragment_comunidad" />
+    <fragment
+        android:id="@+id/historialMedicoFragment"
+        android:name="historial_clinico.HistorialMedicoFragment"
+        android:label="Historial Medico"
+        tools:layout="@layout/fragment_historial_medico" >
+        <action
+            android:id="@+id/action_historialMedicoFragment_to_crearHistorialFragment"
+            app:destination="@id/crearHistorialFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/crearHistorialFragment"
+        android:name="historial_clinico.CrearHistorialFragment"
+        android:label="Añadir Registro"
+        tools:layout="@layout/fragment_crear_historial" />
 
 
 </navigation>
