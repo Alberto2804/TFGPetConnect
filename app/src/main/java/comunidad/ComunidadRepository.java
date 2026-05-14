@@ -2,15 +2,12 @@ package comunidad;
 
 import android.os.Handler;
 import android.os.Looper;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-
+import java.util.Collections;
 import java.util.List;
-
 import api.Resource;
 import api.RetrofitClient;
-import comunidad.Mensaje;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -22,7 +19,13 @@ public class ComunidadRepository {
     private Runnable listenerRunnable;
     private boolean isListening = false;
 
-    // Simula el addSnapshotListener de Firestore
+    // Controlamos el límite (empezamos por 50)
+    private int limiteActual = 50;
+
+    public void aumentarLimite() {
+        this.limiteActual += 50; // Cada vez que suba, cargamos 50 más
+    }
+
     public LiveData<Resource<List<Mensaje>>> obtenerMensajes(String token) {
         if (listenerHandler == null) {
             mensajesLiveData.setValue(Resource.loading(null));
@@ -33,20 +36,19 @@ public class ComunidadRepository {
                 @Override
                 public void run() {
                     if (isListening) {
-                        RetrofitClient.getApi().getMensajesChat(token).enqueue(new Callback<List<Mensaje>>() {
+                        // Enviamos el limiteActual a la API
+                        RetrofitClient.getApi().getMensajesChat(token, limiteActual).enqueue(new Callback<List<Mensaje>>() {
                             @Override
                             public void onResponse(Call<List<Mensaje>> call, Response<List<Mensaje>> response) {
                                 if (response.isSuccessful() && response.body() != null) {
-                                    mensajesLiveData.postValue(Resource.success(response.body()));
+                                    List<Mensaje> lista = response.body();
+                                    Collections.reverse(lista); // El más nuevo abajo
+                                    mensajesLiveData.postValue(Resource.success(lista));
                                 }
                             }
-
                             @Override
-                            public void onFailure(Call<List<Mensaje>> call, Throwable t) {
-                                // Falla silenciosamente en el polling igual que el error de Firestore
-                            }
+                            public void onFailure(Call<List<Mensaje>> call, Throwable t) {}
                         });
-                        // Se recarga cada 2 segundos (Tiempo real)
                         listenerHandler.postDelayed(this, 2000);
                     }
                 }
@@ -56,19 +58,13 @@ public class ComunidadRepository {
         return mensajesLiveData;
     }
 
-    // Simula el db.collection("...").add(c)
     public void agregarMensaje(String token, Mensaje mensaje) {
         RetrofitClient.getApi().enviarMensajeChat(token, mensaje).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                // Si tienes un LiveData de estado de envío podrías actualizarlo aquí
-            }
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {}
+            @Override public void onResponse(Call<Void> call, Response<Void> response) {}
+            @Override public void onFailure(Call<Void> call, Throwable t) {}
         });
     }
 
-    // Simula el listener.remove()
     public void stopListening() {
         isListening = false;
         if (listenerHandler != null && listenerRunnable != null) {

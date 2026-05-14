@@ -75,10 +75,15 @@ public interface SupabaseAPI {
     );
 
     // --- CHAT DE COMUNIDAD ---
-    @retrofit2.http.GET("comunidad?select=*&order=created_at.asc")
-    retrofit2.Call<java.util.List<comunidad.Mensaje>> getMensajesChat(@retrofit2.http.Header("Authorization") String token);
 
-    @retrofit2.http.POST("comunidad")
+    // --- CHAT DE COMUNIDAD ---
+    @retrofit2.http.GET("rest/v1/comunidad?select=*&order=created_at.desc")
+    retrofit2.Call<java.util.List<comunidad.Mensaje>> getMensajesChat(
+            @retrofit2.http.Header("Authorization") String token,
+            @retrofit2.http.Query("limit") int limite // <--- Añadimos el límite aquí
+    );
+
+    @retrofit2.http.POST("rest/v1/comunidad")
     retrofit2.Call<Void> enviarMensajeChat(
             @retrofit2.http.Header("Authorization") String token,
             @retrofit2.http.Body comunidad.Mensaje mensaje

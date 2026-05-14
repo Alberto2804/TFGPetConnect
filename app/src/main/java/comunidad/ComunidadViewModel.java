@@ -29,6 +29,10 @@ public class ComunidadViewModel extends AndroidViewModel {
         repository.agregarMensaje(token, mensaje);
     }
 
+    public void cargarMasMensajes() {
+        repository.aumentarLimite();
+    }
+
     @Override
     protected void onCleared() {
         super.onCleared();

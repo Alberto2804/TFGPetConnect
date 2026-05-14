@@ -12,6 +12,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import java.util.List;
+
 import api.Resource;
 import comunidad.Mensaje;
 import es.iesagora.proyectopetconnect.databinding.FragmentComunidadBinding;
@@ -57,16 +59,49 @@ public class ComunidadFragment extends Fragment {
         binding.recyclerViewChat.setLayoutManager(layoutManager);
         binding.recyclerViewChat.setAdapter(chatAdapter);
 
+        binding.recyclerViewChat.addOnScrollListener(new androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull androidx.recyclerview.widget.RecyclerView recyclerView, int dx, int dy) {
+                // dy < 0 significa que el usuario está deslizando hacia arriba
+                // !recyclerView.canScrollVertically(-1) comprueba si se ha llegado al inicio de la lista
+                if (dy < 0 && !recyclerView.canScrollVertically(-1)) {
+                    // Si llegamos al tope superior, pedimos más mensajes
+                    comunidadViewModel.cargarMasMensajes();
+                }
+            }
+        });
+
         // Activamos la carga en tiempo real (similar a Firestore snapshot)
         String authHeader = "Bearer " + prefs.getToken();
         comunidadViewModel.getMensajes(authHeader).observe(getViewLifecycleOwner(), resource -> {
             if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
-                int tamañoAnterior = chatAdapter.getItemCount();
-                chatAdapter.setLista(resource.data);
 
-                // Si entra un mensaje nuevo, scrollear abajo
-                if (resource.data.size() > tamañoAnterior) {
-                    binding.recyclerViewChat.scrollToPosition(resource.data.size() - 1);
+                List<Mensaje> nuevaLista = resource.data;
+                int cantidadAnterior = chatAdapter.getItemCount();
+                int mensajesAñadidos = nuevaLista.size() - cantidadAnterior;
+
+                LinearLayoutManager lm = (LinearLayoutManager) binding.recyclerViewChat.getLayoutManager();
+
+                // 1. Guardamos la posición exacta al milímetro antes de actualizar
+                int posicionActual = lm != null ? lm.findFirstVisibleItemPosition() : 0;
+                View vistaSuperior = lm != null ? lm.findViewByPosition(posicionActual) : null;
+                int offsetPíxeles = vistaSuperior != null ? vistaSuperior.getTop() : 0;
+
+                // Comprobamos si estabas leyendo el final de la conversación
+                boolean estabaAlFinal = lm != null && lm.findLastVisibleItemPosition() >= cantidadAnterior - 2;
+
+                // 2. Metemos los mensajes (esto descoloca la lista internamente)
+                chatAdapter.setLista(nuevaLista);
+
+                // 3. Restauramos la posición
+                if (cantidadAnterior == 0 || estabaAlFinal) {
+                    // Si acabas de entrar o estabas abajo del todo, te llevamos al último mensaje
+                    binding.recyclerViewChat.scrollToPosition(nuevaLista.size() - 1);
+
+                } else if (mensajesAñadidos > 0 && lm != null) {
+                    // EL ANTI-SALTO: Le sumamos a tu posición los 50 mensajes que acaban de entrar por arriba.
+                    // Visulamente la pantalla se quedará congelada en el texto que estabas leyendo.
+                    lm.scrollToPositionWithOffset(posicionActual + mensajesAñadidos, offsetPíxeles);
                 }
             }
         });
