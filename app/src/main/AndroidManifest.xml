@@ -6,6 +6,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -17,6 +21,10 @@
         android:theme="@style/Theme.ProyectoPetConnect">
 
         <activity
+            android:name="es.iesagora.proyectopetconnect.MainActivity"
+            android:exported="false" />
+
+        <activity
             android:name="auth.AuthActivity"
             android:exported="true">
             <intent-filter>
@@ -25,11 +33,7 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
+        <receiver android:name="es.iesagora.proyectopetconnect.NotificationReceiver" android:exported="false" />
 
     </application>
 

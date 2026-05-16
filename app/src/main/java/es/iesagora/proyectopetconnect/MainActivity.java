@@ -22,6 +22,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            android.app.NotificationChannel channel = new android.app.NotificationChannel(
+                    "agenda_channel", "Avisos de Agenda",
+                    android.app.NotificationManager.IMPORTANCE_HIGH);
+            android.app.NotificationManager manager = getSystemService(android.app.NotificationManager.class);
+            if (manager != null) manager.createNotificationChannel(channel);
+        }
+
         // 1. Configuración del Modo Oscuro
         PreferencesRepository prefs = new PreferencesRepository(this);
         if (prefs.isModoOscuro()) {
@@ -43,11 +51,13 @@ public class MainActivity extends AppCompatActivity {
             navController = navHostFragment.getNavController();
         }
 
-            appBarConfiguration = new AppBarConfiguration.Builder(binding.bottomNavView.getMenu()).build();
+        appBarConfiguration = new AppBarConfiguration.Builder(binding.bottomNavView.getMenu()).build();
 
-            // Vinculamos la barra superior (Toolbar) para que el título cambie automáticamente
-            NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-            NavigationUI.setupWithNavController(binding.bottomNavView, navController);
+        // Vinculamos la barra superior (Toolbar) para que el título cambie automáticamente
+        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        NavigationUI.setupWithNavController(binding.bottomNavView, navController);
+
+
     }
 
     // Gestiona la flecha de ir hacia atrás en pantallas que no son las principales (ej. Ajustes)

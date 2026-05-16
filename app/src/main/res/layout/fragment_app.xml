@@ -24,18 +24,12 @@
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/tvHola"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Hola 👋"
-                    android:textSize="16sp" />
 
                 <TextView
                     android:id="@+id/tvNombre"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="María"
+                    android:text=""
                     android:textStyle="bold"
                     android:textSize="22sp"
                     />
@@ -51,6 +45,15 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 app:tint="?android:attr/textColorPrimary" />
         </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progressBarApp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:visibility="gone"
+            android:indeterminateTint="#44A499" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardPerfilMascota"
@@ -69,7 +72,8 @@
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
                 android:padding="12dp"
-                android:gravity="center_vertical"> <ImageView
+                android:gravity="center_vertical">
+                <ImageView
                 android:id="@+id/imgMascota"
                 android:layout_width="100dp"
                 android:layout_height="match_parent"
@@ -246,47 +250,6 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardProximaCita"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?android:attr/selectableItemBackground"
-            android:backgroundTint="@color/color_fondo_tarjeta_roja"
-            app:cardCornerRadius="16dp"
-            app:cardUseCompatPadding="true">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="20dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Próxima cita"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Vacuna anual"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="15 Nov, 10:00 AM"
-                    android:textSize="14sp" />
-
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 </ScrollView>

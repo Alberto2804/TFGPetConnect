@@ -26,6 +26,11 @@ public class UserViewModel extends AndroidViewModel {
         userRepository = new UserRepository();
         prefsRepo = new PreferencesRepository(application);
     }
+
+    // ==========================================
+    // MÉTODOS DEL PERFIL DE USUARIO Y AJUSTES (ORIGINALES)
+    // ==========================================
+
     public LiveData<Resource<JsonObject>> getPerfilUsuario() {
         String token = prefsRepo.getToken();
         String userId = prefsRepo.getUserId();
@@ -35,9 +40,9 @@ public class UserViewModel extends AndroidViewModel {
             error.setValue(Resource.error("Sesión no válida", null));
             return error;
         }
-
         return userRepository.obtenerPerfil(token, userId);
     }
+
     public LiveData<Resource<Void>> actualizarPerfil(String nuevoNombre, File archivoFoto) {
         String token = prefsRepo.getToken();
         String userId = prefsRepo.getUserId();
@@ -49,10 +54,8 @@ public class UserViewModel extends AndroidViewModel {
         }
 
         if (archivoFoto != null) {
-
             return userRepository.subirFotoPerfil(token, userId, archivoFoto);
         } else {
-
             return userRepository.actualizarNombre(token, userId, nuevoNombre);
         }
     }
@@ -61,39 +64,6 @@ public class UserViewModel extends AndroidViewModel {
         String token = prefsRepo.getToken();
         String userId = prefsRepo.getUserId();
         return userRepository.actualizarNombre(token, userId, nuevoNombre);
-    }
-
-    public LiveData<Resource<List<JsonObject>>> getMascotas() {
-        String token = prefsRepo.getToken();
-        String userId = prefsRepo.getUserId();
-        return userRepository.obtenerMascotas(token, userId);
-    }
-
-    public LiveData<Resource<Void>> guardarMascota(String nombre, String raza, String edad) {
-        String token = prefsRepo.getToken();
-        String userId = prefsRepo.getUserId();
-        return userRepository.crearMascota(token, userId, nombre, raza, edad);
-    }
-
-    public LiveData<Resource<Void>> guardarFotoMascota(File archivoFoto) {
-        String token = prefsRepo.getToken();
-        String userId = prefsRepo.getUserId();
-        return userRepository.subirFotoMascota(token, userId, archivoFoto);
-    }
-
-
-    public LiveData<Resource<Void>> editarMascota(String nombre, String raza, String edad) {
-        String token = prefsRepo.getToken();
-        String userId = prefsRepo.getUserId();
-        return userRepository.actualizarMascota(token, userId, nombre, raza, edad);
-    }
-
-    public void setMascotaActiva(String mascotaId) {
-        prefsRepo.guardarMascotaActivaId(mascotaId);
-    }
-
-    public String getMascotaActivaId() {
-        return prefsRepo.getMascotaActivaId();
     }
 
     public void setModoOscuro(boolean isOscuro) {
@@ -107,4 +77,103 @@ public class UserViewModel extends AndroidViewModel {
     public void hacerLogout() {
         prefsRepo.cerrarSesion();
     }
+
+    // ==========================================
+    // MÉTODOS DE LA MASCOTA ACTIVA Y BBDD
+    // ==========================================
+
+    public LiveData<Resource<List<JsonObject>>> getMascotas() {
+        String token = prefsRepo.getToken();
+        String userId = prefsRepo.getUserId();
+        return userRepository.obtenerMascotas(token, userId);
+    }
+
+    public void setMascotaActiva(String mascotaId) {
+        prefsRepo.guardarMascotaActivaId(mascotaId);
+    }
+
+    public String getMascotaActivaId() {
+        return prefsRepo.getMascotaActivaId();
+    }
+
+    public LiveData<Resource<String>> guardarFotoMascota(String nombreArchivo, File archivoFoto) {
+        String token = prefsRepo.getToken();
+        return userRepository.subirFotoMascota(token, nombreArchivo, archivoFoto);
+    }
+
+    public LiveData<Resource<Void>> guardarMascota(String nombre, String animal, String raza, String fechaNacimiento, String sexo, String peso, String fotoUrl) {
+        String token = prefsRepo.getToken();
+        String userId = prefsRepo.getUserId();
+        return userRepository.crearMascota(token, userId, nombre, animal, raza, fechaNacimiento, sexo, peso, fotoUrl);
+    }
+
+    public LiveData<Resource<Void>> editarMascota(String mascotaId, String nombre, String animal, String raza, String fechaNacimiento, String sexo, String peso, String fotoUrl) {
+        String token = prefsRepo.getToken();
+        return userRepository.actualizarMascota(token, mascotaId, nombre, animal, raza, fechaNacimiento, sexo, peso, fotoUrl);
+    }
+
+    // ==========================================
+    // DATOS ESTÁTICOS Y LÓGICA DE NEGOCIO (MVVM)
+    // ==========================================
+
+    public String[] getListaAnimales() {
+        return new String[]{"Perro", "Gato", "Pájaro", "Conejo", "Tortuga", "Hámster", "Cobaya"};
+    }
+
+    public String[] getListaSexo() {
+        return new String[]{"Masculino", "Femenino"};
+    }
+
+    public String[] getRazasPorAnimal(String animal) {
+        java.util.HashMap<String, String[]> mapaRazas = new java.util.HashMap<>();
+        mapaRazas.put("Perro", new String[]{"Mestizo", "Pastor Belga", "Golden Retriever", "Bulldog", "Caniche"});
+        mapaRazas.put("Gato", new String[]{"Común Europeo", "Siamés", "Persa", "Sphynx", "Bengalí"});
+        mapaRazas.put("Pájaro", new String[]{"Canario", "Periquito", "Agapornis", "Loro", "Ninfa"});
+        mapaRazas.put("Conejo", new String[]{"Belier", "Angora", "Toy", "Común"});
+        mapaRazas.put("Tortuga", new String[]{"De agua", "De tierra", "Mediterránea"});
+        mapaRazas.put("Hámster", new String[]{"Ruso", "Sirio", "Roborowski"});
+        mapaRazas.put("Cobaya", new String[]{"Americana", "Peruana", "Abisinia"});
+
+        return mapaRazas.containsKey(animal) ? mapaRazas.get(animal) : new String[]{""};
+    }
+
+    public String calcularEdad(String fechaNacimientoStr) {
+        if (fechaNacimientoStr == null || fechaNacimientoStr.isEmpty()) return "Edad desconocida";
+        try {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+            java.util.Date fechaNacimiento = sdf.parse(fechaNacimientoStr);
+
+            java.util.Calendar hoy = java.util.Calendar.getInstance();
+            java.util.Calendar nacimiento = java.util.Calendar.getInstance();
+            nacimiento.setTime(fechaNacimiento);
+
+            // Calculamos diferencias directas
+            int yearDiff = hoy.get(java.util.Calendar.YEAR) - nacimiento.get(java.util.Calendar.YEAR);
+            int monthDiff = hoy.get(java.util.Calendar.MONTH) - nacimiento.get(java.util.Calendar.MONTH);
+            int dayDiff = hoy.get(java.util.Calendar.DAY_OF_MONTH) - nacimiento.get(java.util.Calendar.DAY_OF_MONTH);
+
+            // Convertimos todo a meses
+            int totalMeses = (yearDiff * 12) + monthDiff;
+
+            // Si el día de hoy es anterior al día en que nació, restamos un mes porque no lo ha cumplido entero
+            if (dayDiff < 0) {
+                totalMeses--;
+            }
+
+            // Lógica para mostrar Años o Meses
+            if (totalMeses < 12) {
+                if (totalMeses <= 0) {
+                    return "Menos de 1 mes";
+                }
+                return totalMeses + (totalMeses == 1 ? " mes" : " meses");
+            } else {
+                int anios = totalMeses / 12;
+                return anios + (anios == 1 ? " año" : " años");
+            }
+
+        } catch (Exception e) {
+            return "Edad desconocida";
+        }
+    }
+
 }

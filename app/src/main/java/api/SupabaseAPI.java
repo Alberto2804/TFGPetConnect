@@ -117,4 +117,10 @@ public interface SupabaseAPI {
             @Header("Authorization") String token,
             @Body historial_clinico.HistorialMedico nuevoRegistro
     );
+
+    @POST("rest/v1/citas")
+    Call<Void> crearCitaDB(@Header("Authorization") String token, @Body com.google.gson.JsonObject citaData);
+
+    @GET("rest/v1/citas")
+    Call<java.util.List<com.google.gson.JsonObject>> obtenerCitasUsuario(@Header("Authorization") String token, @Query("user_id") String userId);
 }

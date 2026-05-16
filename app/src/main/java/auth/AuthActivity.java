@@ -12,13 +12,19 @@ public class AuthActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        AuthRepository repo = new AuthRepository(this);
-
-        if (repo.isUserLoggedIn()) {
-            startActivity(new Intent(this, MainActivity.class));
+        // 1. El portero comprueba si ya tienes sesión guardada
+        sharedpreferences.PreferencesRepository prefs = new sharedpreferences.PreferencesRepository(this);
+        if (prefs.getToken() != null && !prefs.getToken().isEmpty()) {
+            // Tienes sesión: Te mandamos directo al MainActivity a la velocidad de la luz
+            android.content.Intent intent = new android.content.Intent(this, es.iesagora.proyectopetconnect.MainActivity.class);
+            startActivity(intent);
+            // Matamos esta pantalla de login para que no puedas volver atrás
             finish();
+            // IMPORTANTE: El return corta la ejecución para que no dibuje el login
             return;
         }
+
+        // 2. Si NO tienes sesión, el portero te deja en la puerta y dibuja el diseño del login
         setContentView(R.layout.activity_auth);
     }
 }

@@ -33,17 +33,6 @@ public class RegistroFragment extends Fragment {
     private FragmentRegistroBinding binding;
     private AuthViewModel authViewModel;
 
-    // --- Variables para la Foto ---
-    private Uri fotoSeleccionadaUri = null;
-    private final ActivityResultLauncher<String> selectorImagenLauncher = registerForActivityResult(
-            new ActivityResultContracts.GetContent(),
-            uri -> {
-                if (uri != null) {
-                    fotoSeleccionadaUri = uri;
-                    Glide.with(this).load(uri).circleCrop().into(binding.ivFotoPerfil);
-                }
-            }
-    );
 
     // --- Variables para Google Sign In ---
     private GoogleSignInClient googleClient;
@@ -78,9 +67,6 @@ public class RegistroFragment extends Fragment {
 
         // Volver al Login
         binding.loginTextView.setOnClickListener(v -> Navigation.findNavController(v).navigate(R.id.loginFragment));
-
-        // Elegir Foto
-        binding.btnSeleccionarFoto.setOnClickListener(v -> selectorImagenLauncher.launch("image/*"));
 
         // Registro Normal por Correo
         binding.registerButton.setOnClickListener(v -> {

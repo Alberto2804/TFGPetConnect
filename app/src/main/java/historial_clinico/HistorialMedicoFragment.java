@@ -49,8 +49,26 @@ public class HistorialMedicoFragment extends Fragment {
         binding.recyclerHistorial.setAdapter(adapter);
 
         viewModel.getHistorial("Bearer " + prefs.getToken(), mascotaId).observe(getViewLifecycleOwner(), resource -> {
-            if (resource.data != null) {
-                adapter.setLista(resource.data);
+            if (resource != null) {
+                switch (resource.status) {
+                    case LOADING:
+                        // Mostramos el círculo de carga
+                        binding.progressBarHistorial.setVisibility(View.VISIBLE);
+                        break;
+
+                    case SUCCESS:
+                        // Ocultamos el círculo al terminar con éxito
+                        binding.progressBarHistorial.setVisibility(View.GONE);
+                        if (resource.data != null) {
+                            adapter.setLista(resource.data);
+                        }
+                        break;
+
+                    case ERROR:
+                        // Ocultamos el círculo y mostramos el error
+                        binding.progressBarHistorial.setVisibility(View.GONE);
+                        break;
+                }
             }
         });
 

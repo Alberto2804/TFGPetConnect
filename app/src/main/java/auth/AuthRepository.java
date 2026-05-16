@@ -131,7 +131,4 @@ public class AuthRepository {
         });
     }
 
-    public boolean isUserLoggedIn() {
-        return !prefsRepo.getToken().isEmpty();
-    }
 }

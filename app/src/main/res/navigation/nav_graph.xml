@@ -16,6 +16,12 @@
         <action
             android:id="@+id/action_appFragment_to_crearMascotaFragment"
             app:destination="@id/crearMascotaFragment" />
+        <action
+            android:id="@+id/action_appFragment_to_detalleMascotaFragment"
+            app:destination="@id/detalleMascotaFragment" />
+        <action
+            android:id="@+id/action_appFragment_to_agendaFragment"
+            app:destination="@id/agendaFragment" />
 
     </fragment>
 
@@ -49,6 +55,20 @@
         android:name="historial_clinico.CrearHistorialFragment"
         android:label="Añadir Registro"
         tools:layout="@layout/fragment_crear_historial" />
+    <fragment
+        android:id="@+id/detalleMascotaFragment"
+        android:name="es.iesagora.proyectopetconnect.DetalleMascotaFragment"
+        android:label="Detalle Mascota"
+        tools:layout="@layout/fragment_detalle_mascota" >
+        <action
+            android:id="@+id/action_detalleMascotaFragment_to_crearMascotaFragment"
+            app:destination="@id/crearMascotaFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/agendaFragment"
+        android:name="agenda.AgendaFragment"
+        android:label="Mi Agenda"
+        tools:layout="@layout/fragment_agenda" />
 
 
 </navigation>
