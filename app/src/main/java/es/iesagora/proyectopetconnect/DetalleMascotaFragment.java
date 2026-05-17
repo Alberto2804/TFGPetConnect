@@ -109,7 +109,8 @@ public class DetalleMascotaFragment extends Fragment {
             Glide.with(this)
                     .load(urlFoto)
                     .centerCrop()
-                    .diskCacheStrategy(DiskCacheStrategy.ALL) // Glide optimizado con caché en disco
+                    // 🔥 VOLVEMOS A ACTIVAR LA CACHÉ NORMAL
+                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                     .into(binding.ivDetalleFoto);
         } else {
             binding.ivDetalleFoto.setImageResource(R.drawable.ic_foto);

@@ -3,5 +3,13 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-        <color name="color_fondo_pantalla">#D6F2F3</color> <color name="color_fondo_tarjeta_roja">#F4D6D6</color>
+    <color name="colorPrimary">#44A499</color>
+    <color name="color_fondo_pantalla">#F5F5F5</color>
+    <color name="color_superficie_tarjeta">#FFFFFF</color>
+
+    <color name="color_texto_principal">#212121</color>
+    <color name="color_texto_secundario">#666666</color>
+
+    <color name="color_fondo_tarjeta_roja">#F4D6D6</color>
+    <color name="color_error">#D32F2F</color>
 </resources>

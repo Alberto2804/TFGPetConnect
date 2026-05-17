@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E5DDD5"> <androidx.recyclerview.widget.RecyclerView
+    android:background="@color/color_fondo_pantalla"> <androidx.recyclerview.widget.RecyclerView
     android:id="@+id/recyclerViewChat"
     android:layout_width="0dp"
     android:layout_height="0dp"
@@ -18,8 +18,7 @@
         android:id="@+id/layoutInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
-        android:elevation="8dp"
+        android:background="@color/color_superficie_tarjeta" android:elevation="8dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="8dp"
@@ -32,7 +31,8 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:hint="Escribe un mensaje..."
-            android:inputType="textMultiLine"
+            android:textColorHint="@color/color_texto_secundario"
+            android:textColor="@color/color_texto_principal" android:inputType="textMultiLine"
             android:maxLines="4"
             android:padding="12dp"
             android:textSize="16sp" />
@@ -44,7 +44,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Enviar mensaje"
             android:src="@android:drawable/ic_menu_send"
-            app:tint="#44A499" />
+            app:tint="@color/colorPrimary" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

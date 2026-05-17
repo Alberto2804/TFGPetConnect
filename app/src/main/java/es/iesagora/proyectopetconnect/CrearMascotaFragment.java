@@ -57,7 +57,6 @@ public class CrearMascotaFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // ✅ ESTE ES EL CAMBIO QUE ARREGLA TODO EL PARPADEO
         userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
 
         prefs = new sharedpreferences.PreferencesRepository(requireContext());

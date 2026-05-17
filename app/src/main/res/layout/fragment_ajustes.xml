@@ -17,6 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Ajustes de Perfil"
+            android:textColor="@color/color_texto_principal"
             android:textSize="24sp"
             android:textStyle="bold"
             android:layout_marginBottom="32dp"/>
@@ -26,7 +27,8 @@
             android:layout_height="140dp"
             app:cardCornerRadius="70dp"
             android:layout_marginBottom="16dp"
-            app:cardElevation="4dp">
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/color_superficie_tarjeta">
 
             <ImageView
                 android:id="@+id/ivFotoPerfil"
@@ -42,7 +44,7 @@
             android:layout_height="wrap_content"
             android:text="Cambiar Foto"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#44A499"
+            android:backgroundTint="@color/colorPrimary"
             android:layout_marginBottom="32dp"/>
 
         <LinearLayout
@@ -55,6 +57,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Nombre de Usuario"
+                android:textColor="@color/color_texto_principal"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp"/>
 
@@ -62,10 +65,12 @@
                 android:id="@+id/etNombreUsuario"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:background="@android:color/white"
+                android:background="@color/color_superficie_tarjeta"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:hint="Ej. María Pérez"
+                android:textColorHint="@color/color_texto_secundario"
+                android:textColor="@color/color_texto_principal"
                 android:inputType="textPersonName"
                 android:elevation="2dp"/>
         </LinearLayout>
@@ -76,7 +81,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:layout_marginBottom="32dp"
-            android:background="@android:color/white"
+            android:background="@color/color_superficie_tarjeta"
             android:padding="16dp"
             android:elevation="2dp">
 
@@ -85,6 +90,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Modo Oscuro"
+                android:textColor="@color/color_texto_principal"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 />
@@ -92,8 +98,7 @@
             <Switch
                 android:id="@+id/switchModoOscuro"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:theme="@style/Theme.AppCompat.Light"/>
+                android:layout_height="wrap_content"/>
         </LinearLayout>
 
         <Button
@@ -104,13 +109,24 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#44A499"
+            android:backgroundTint="@color/colorPrimary"
             android:layout_marginBottom="16dp"/>
 
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/btnVerUsuarios"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="VER USUARIOS REGISTRADOS"
+            android:backgroundTint="#FF9800"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/btnLogout"

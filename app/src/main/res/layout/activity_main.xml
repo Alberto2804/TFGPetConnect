@@ -39,9 +39,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:menu="@menu/bottom_menu"
-        android:background="#FFFFFF"
-        app:itemIconTint="#44A499"
-        app:itemTextColor="#44A499"
+        android:background="#44A499"
+        app:itemIconTint="@color/white"
+        app:itemTextColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

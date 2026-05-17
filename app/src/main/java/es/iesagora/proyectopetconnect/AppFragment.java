@@ -130,6 +130,7 @@ public class AppFragment extends Fragment {
 
     private void pintarMascotaEnTarjeta(JsonObject mascota) {
         String nombre = mascota.has("nombre") && !mascota.get("nombre").isJsonNull() ? mascota.get("nombre").getAsString() : "Sin nombre";
+        String animal = mascota.has("animal") && !mascota.get("animal").isJsonNull() ? mascota.get("animal").getAsString() : "";
         String raza = mascota.has("raza") && !mascota.get("raza").isJsonNull() ? mascota.get("raza").getAsString() : "";
         String fechaNacimiento = mascota.has("fecha_nacimiento") && !mascota.get("fecha_nacimiento").isJsonNull() ? mascota.get("fecha_nacimiento").getAsString() : "";
         String urlFoto = mascota.has("foto_url") && !mascota.get("foto_url").isJsonNull() ? mascota.get("foto_url").getAsString() : "";
@@ -137,7 +138,10 @@ public class AppFragment extends Fragment {
         String edadCalculada = userViewModel.calcularEdad(fechaNacimiento);
 
         binding.tvNombreMascota.setText(nombre);
-        binding.tvRazaEdad.setText(raza + " • " + edadCalculada);
+        binding.tvAnimalMascota.setText(animal);
+        binding.tvRaza.setText(raza);
+        binding.tvEdad.setText(edadCalculada);
+
 
         Glide.with(this)
                 .load(urlFoto)

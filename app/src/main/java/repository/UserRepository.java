@@ -19,10 +19,9 @@ public class UserRepository {
 
     private final SupabaseAPI supabaseAPI;
 
-    // 1. LOS LIVEDATA AHORA SON GLOBALES Y ÚNICOS
-    private final MutableLiveData<Resource<JsonObject>> perfilLiveData = new MutableLiveData<>();
-    private final MutableLiveData<Resource<List<JsonObject>>> mascotasLiveData = new MutableLiveData<>();
-
+    // ==========================================
+    // 🧠 LAS COMPUERTAS DE LA CACHÉ (EN MEMORIA RAM)
+    // ==========================================
     private List<JsonObject> cacheMascotas = null;
     private JsonObject cachePerfil = null;
 
@@ -35,31 +34,37 @@ public class UserRepository {
     // ==========================================
 
     public LiveData<Resource<JsonObject>> obtenerPerfil(String token, String userId) {
-        // 2. SI YA TENEMOS LA CACHÉ, LA DEVOLVEMOS Y CORTAMOS LA EJECUCIÓN (Carga en 0ms)
+        MutableLiveData<Resource<JsonObject>> resultado = new MutableLiveData<>();
+
+        // 🚀 TRUCO CACHÉ: Si ya tenemos el perfil guardado en RAM, lo escupimos YA (0 ms)
         if (cachePerfil != null) {
-            perfilLiveData.setValue(Resource.success(cachePerfil));
-            return perfilLiveData;
+            resultado.setValue(Resource.success(cachePerfil));
+        } else {
+            resultado.setValue(Resource.loading(null));
         }
 
-        perfilLiveData.setValue(Resource.loading(null));
-
+        // De fondo, actualizamos por si acaso ha cambiado algo en la web de Supabase
         supabaseAPI.obtenerUsuario("Bearer " + token, "eq." + userId, "*")
                 .enqueue(new Callback<List<JsonObject>>() {
                     @Override
                     public void onResponse(Call<List<JsonObject>> call, Response<List<JsonObject>> response) {
                         if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                            cachePerfil = response.body().get(0);
-                            perfilLiveData.setValue(Resource.success(cachePerfil));
+                            cachePerfil = response.body().get(0); // Guardamos en la caché
+                            resultado.setValue(Resource.success(cachePerfil)); // Emitimos el dato fresco
                         } else {
-                            perfilLiveData.setValue(Resource.error("Error al cargar", null));
+                            if (cachePerfil == null) {
+                                resultado.setValue(Resource.error("Error al cargar", null));
+                            }
                         }
                     }
                     @Override
                     public void onFailure(Call<List<JsonObject>> call, Throwable t) {
-                        perfilLiveData.setValue(Resource.error(t.getMessage(), null));
+                        if (cachePerfil == null) {
+                            resultado.setValue(Resource.error(t.getMessage(), null));
+                        }
                     }
                 });
-        return perfilLiveData;
+        return resultado;
     }
 
     public LiveData<Resource<Void>> actualizarDatosUsuario(String token, String userId, String nuevoNombre, String urlFoto) {
@@ -74,8 +79,7 @@ public class UserRepository {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    cachePerfil = null; // Limpiamos caché
-                    obtenerPerfil(token, userId); // 3. FORZAMOS RECARGA SILENCIOSA PARA QUE LA UI SE ACTUALICE SOLA
+                    cachePerfil = null; // 🧼 LIMPIAMOS CACHÉ: Forzamos a que se descargue limpio la próxima vez
                     resultado.setValue(Resource.success(null));
                 } else {
                     resultado.setValue(Resource.error("Error al actualizar la base de datos", null));
@@ -121,31 +125,36 @@ public class UserRepository {
     // ==========================================
 
     public LiveData<Resource<List<JsonObject>>> obtenerMascotas(String token, String userId) {
-        // SI YA TENEMOS CACHÉ, NO LLAMAMOS A INTERNET
-        if (cacheMascotas != null) {
-            mascotasLiveData.setValue(Resource.success(cacheMascotas));
-            return mascotasLiveData;
-        }
+        MutableLiveData<Resource<List<JsonObject>>> resultado = new MutableLiveData<>();
 
-        mascotasLiveData.setValue(Resource.loading(null));
+        // 🚀 TRUCO CACHÉ: Si las mascotas ya están en la RAM, las pintamos DE GOLPE (0 ms)
+        if (cacheMascotas != null) {
+            resultado.setValue(Resource.success(cacheMascotas));
+        } else {
+            resultado.setValue(Resource.loading(null));
+        }
 
         String filtroUserId = "eq." + userId;
         supabaseAPI.obtenerMascota("Bearer " + token, filtroUserId, "*").enqueue(new Callback<List<JsonObject>>() {
             @Override
             public void onResponse(Call<List<JsonObject>> call, Response<List<JsonObject>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    cacheMascotas = response.body();
-                    mascotasLiveData.setValue(Resource.success(cacheMascotas));
+                    cacheMascotas = response.body(); // Guardamos la lista en la memoria interna
+                    resultado.setValue(Resource.success(cacheMascotas)); // Emitimos los datos frescos
                 } else {
-                    mascotasLiveData.setValue(Resource.success(new java.util.ArrayList<>()));
+                    if (cacheMascotas == null) {
+                        resultado.setValue(Resource.success(new java.util.ArrayList<>()));
+                    }
                 }
             }
             @Override
             public void onFailure(Call<List<JsonObject>> call, Throwable t) {
-                mascotasLiveData.setValue(Resource.error(t.getMessage(), null));
+                if (cacheMascotas == null) {
+                    resultado.setValue(Resource.error(t.getMessage(), null));
+                }
             }
         });
-        return mascotasLiveData;
+        return resultado;
     }
 
     public LiveData<Resource<String>> subirFotoMascota(String token, String nombreArchivo, File archivoFoto) {
@@ -278,6 +287,48 @@ public class UserRepository {
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) resultado.setValue(Resource.success(null));
                 else resultado.setValue(Resource.error("Error al cambiar contraseña. Minimo 6 caracteres.", null));
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                resultado.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return resultado;
+    }
+
+    public LiveData<Resource<List<JsonObject>>> obtenerTodosLosUsuarios(String token) {
+        MutableLiveData<Resource<List<JsonObject>>> resultado = new MutableLiveData<>();
+        resultado.setValue(Resource.loading(null));
+
+        supabaseAPI.obtenerTodosLosUsuarios("Bearer " + token, "*").enqueue(new Callback<List<JsonObject>>() {
+            @Override
+            public void onResponse(Call<List<JsonObject>> call, Response<List<JsonObject>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    resultado.setValue(Resource.success(response.body()));
+                } else {
+                    resultado.setValue(Resource.error("Error al obtener la lista de usuarios", null));
+                }
+            }
+            @Override
+            public void onFailure(Call<List<JsonObject>> call, Throwable t) {
+                resultado.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return resultado;
+    }
+
+    public LiveData<Resource<Void>> eliminarUsuarioAdmin(String token, String usuarioId) {
+        MutableLiveData<Resource<Void>> resultado = new MutableLiveData<>();
+        resultado.setValue(Resource.loading(null));
+
+        supabaseAPI.borrarUsuarioDB("Bearer " + token, "eq." + usuarioId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    resultado.setValue(Resource.success(null));
+                } else {
+                    resultado.setValue(Resource.error("No se pudo eliminar al usuario", null));
+                }
             }
             @Override
             public void onFailure(Call<Void> call, Throwable t) {

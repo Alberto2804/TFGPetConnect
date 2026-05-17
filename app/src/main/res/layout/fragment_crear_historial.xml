@@ -3,16 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
-    android:orientation="vertical"
+    android:background="@color/color_fondo_pantalla" android:orientation="vertical"
     android:padding="24dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Añadir Registro Médico"
-        android:textColor="#333333"
-        android:textSize="22sp"
+        android:textColor="@color/color_texto_principal" android:textSize="22sp"
         android:textStyle="bold"
         android:layout_marginBottom="24dp"/>
 
@@ -20,8 +18,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Tipo de evento"
-        android:textColor="#666666"
-        android:textSize="14sp"
+        android:textColor="@color/color_texto_secundario" android:textSize="14sp"
         android:layout_marginBottom="8dp"/>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -35,14 +32,17 @@
             android:id="@+id/spinnerTipo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="none" /> </com.google.android.material.textfield.TextInputLayout>
+            android:inputType="none"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:ellipsize="end" />
+    </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        app:boxStrokeColor="#44A499"
-        android:hint="Fecha">
+        app:boxStrokeColor="@color/colorPrimary" android:hint="Fecha">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etFecha"
@@ -55,7 +55,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        app:boxStrokeColor="#44A499"
+        app:boxStrokeColor="@color/colorPrimary"
         android:hint="Descripción (ej: Vacuna de la rabia)">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -67,29 +67,13 @@
             android:gravity="top"/>
     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        app:boxStrokeColor="#44A499"
-        android:hint="Notas del veterinario (Opcional)">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etNotas"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textMultiLine"
-            android:lines="3"
-            android:gravity="top"/>
-    </com.google.android.material.textfield.TextInputLayout>
 
     <Button
         android:id="@+id/btnGuardarRegistro"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="GUARDAR REGISTRO"
-        android:backgroundTint="#44A499"
-        android:textColor="@android:color/white"
+        android:backgroundTint="@color/colorPrimary" android:textColor="@android:color/white"
         android:textStyle="bold"
         app:cornerRadius="8dp"/>
 

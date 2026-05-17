@@ -60,6 +60,14 @@ public class UserViewModel extends AndroidViewModel {
         return userRepository.actualizarContrasena(token, nuevaContrasena);
     }
 
+    public LiveData<Resource<List<JsonObject>>> obtenerTodosLosUsuarios(String token) {
+        return userRepository.obtenerTodosLosUsuarios(token);
+    }
+
+    public LiveData<Resource<Void>> eliminarUsuarioAdmin(String token, String usuarioId) {
+        return userRepository.eliminarUsuarioAdmin(token, usuarioId);
+    }
+
     public void setModoOscuro(boolean isOscuro) {
         prefsRepo.guardarModoOscuro(isOscuro);
     }
@@ -125,13 +133,42 @@ public class UserViewModel extends AndroidViewModel {
 
     public String[] getRazasPorAnimal(String animal) {
         java.util.HashMap<String, String[]> mapaRazas = new java.util.HashMap<>();
-        mapaRazas.put("Perro", new String[]{"Mestizo", "Pastor Belga", "Golden Retriever", "Bulldog", "Caniche"});
-        mapaRazas.put("Gato", new String[]{"Común Europeo", "Siamés", "Persa", "Sphynx", "Bengalí"});
-        mapaRazas.put("Pájaro", new String[]{"Canario", "Periquito", "Agapornis", "Loro", "Ninfa"});
-        mapaRazas.put("Conejo", new String[]{"Belier", "Angora", "Toy", "Común"});
-        mapaRazas.put("Tortuga", new String[]{"De agua", "De tierra", "Mediterránea"});
-        mapaRazas.put("Hámster", new String[]{"Ruso", "Sirio", "Roborowski"});
-        mapaRazas.put("Cobaya", new String[]{"Americana", "Peruana", "Abisinia"});
+
+        mapaRazas.put("Perro", new String[]{
+                "Mestizo", "Beagle", "Bichón Maltés", "Border Collie", "Boxer",
+                "Bulldog Francés", "Bulldog Inglés", "Caniche", "Carlino (Pug)", "Chihuahua",
+                "Chow Chow", "Cocker Spaniel", "Dálmata", "Doberman", "Dogo Argentino",
+                "Galgo Español", "Golden Retriever", "Gran Danés", "Husky Siberiano", "Labrador Retriever",
+                "Mastín Español", "Pastor Alemán", "Pastor Belga", "Pinscher", "Pitbull",
+                "Pomerania", "Rottweiler", "San Bernardo", "Schnauzer", "Shiba Inu", "Shih Tzu", "Yorkshire Terrier"
+        });
+
+        mapaRazas.put("Gato", new String[]{
+                "Común Europeo", "Abisinio", "Angora Turco", "Azul Ruso", "Bengalí",
+                "Birmano", "Bombay", "Bosque de Noruega", "Británico de Pelo Corto", "Exótico",
+                "Maine Coon", "Persa", "Ragdoll", "Scottish Fold", "Siamés", "Somali", "Sphynx (Esfinge)"
+        });
+
+        mapaRazas.put("Pájaro", new String[]{
+                "Canario", "Agapornis (Inseparable)", "Cacatúa", "Cotorra", "Diamante de Gould",
+                "Diamante Mandarín", "Gould", "Gorrión de Java", "Guacamayo", "Jilguero",
+                "Loro", "Mainá", "Ninfa (Carolina)", "Periquito", "Ruiseñor"
+        });
+
+        mapaRazas.put("Tortuga", new String[]{
+                "De agua (Orejeras rojas)", "De tierra", "Mediterránea", "Rusa",
+                "De caja", "Leprosa", "Caimán", "Morrocoy"
+        });
+
+        mapaRazas.put("Hámster", new String[]{
+                "Ruso", "Sirio (Dorado)", "Roborowski", "De Campbell",
+                "Chino", "Panda", "Enano Blanco", "Siberiano"
+        });
+
+        mapaRazas.put("Cobaya", new String[]{
+                "Americana", "Peruana", "Abisinia", "Skinny (Sin pelo)",
+                "Coronet", "Rex", "Teddy", "Sheltie (Silkie)"
+        });
 
         return mapaRazas.containsKey(animal) ? mapaRazas.get(animal) : new String[]{""};
     }

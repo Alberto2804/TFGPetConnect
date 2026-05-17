@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <resources>
-    <color name="color_fondo_pantalla">#121212</color> <color name="color_fondo_tarjeta_roja">#4A2E2E</color>
+    <color name="colorPrimary">#66C2B6</color>
+    <color name="color_fondo_pantalla">#121212</color>
+    <color name="color_superficie_tarjeta">#1E1E1E</color>
+
+    <color name="color_texto_principal">#E0E0E0</color>
+    <color name="color_texto_secundario">#A0A0A0</color>
+
+    <color name="color_fondo_tarjeta_roja">#4A2E2E</color>
+    <color name="color_error">#E57373</color>
 </resources>

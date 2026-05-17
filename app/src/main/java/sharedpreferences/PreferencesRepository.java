@@ -58,4 +58,17 @@ public class PreferencesRepository {
 
     public String getNombrePerfil() { return prefs.getString("user_name", "Usuario"); }
     public String getFotoPerfil() { return prefs.getString("user_photo", ""); }
+
+    // Añade esto donde tienes tus otros métodos de guardar
+    public void guardarRol(String rol) {
+        prefs.edit().putString("user_rol", rol).apply();
+    }
+
+    public String getRol() {
+        return prefs.getString("user_rol", "user"); // 'user' por defecto
+    }
+
+    public boolean isAdmin() {
+        return "admin".equals(getRol());
+    }
 }

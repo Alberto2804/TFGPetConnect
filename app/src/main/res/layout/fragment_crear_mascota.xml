@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@color/color_fondo_pantalla"
     android:padding="20dp">
 
     <TextView
@@ -11,6 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Añadir Mascota"
+        android:textColor="@color/color_texto_principal"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
@@ -32,6 +33,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Cambiar Foto"
+        android:textColor="@color/colorPrimary"
         style="@style/Widget.MaterialComponents.Button.TextButton"
         app:layout_constraintTop_toBottomOf="@id/ivFotoMascota"
         app:layout_constraintStart_toStartOf="parent"
@@ -54,11 +56,14 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:boxStrokeColor="@color/colorPrimary"
                 android:hint="Nombre de la mascota">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etNombre"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName"
+                    android:textColor="@color/color_texto_principal" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -66,11 +71,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                app:boxStrokeColor="@color/colorPrimary"
                 android:hint="Tipo de animal">
                 <AutoCompleteTextView
                     android:id="@+id/etAnimal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/color_texto_principal"
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -79,11 +86,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                app:boxStrokeColor="@color/colorPrimary"
                 android:hint="Raza">
                 <AutoCompleteTextView
                     android:id="@+id/etRaza"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/color_texto_principal"
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -92,6 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                app:boxStrokeColor="@color/colorPrimary"
                 android:hint="Fecha de nacimiento">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etFechaNacimiento"
@@ -99,6 +109,7 @@
                     android:layout_height="wrap_content"
                     android:focusable="false"
                     android:clickable="true"
+                    android:textColor="@color/color_texto_principal"
                     android:drawableEnd="@android:drawable/ic_menu_my_calendar" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -107,11 +118,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                app:boxStrokeColor="@color/colorPrimary"
                 android:hint="Sexo">
                 <AutoCompleteTextView
                     android:id="@+id/etSexo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/color_texto_principal"
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -120,11 +133,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                app:boxStrokeColor="@color/colorPrimary"
                 android:hint="Peso en Kg (Opcional)">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPeso"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/color_texto_principal"
                     android:inputType="numberDecimal" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
@@ -135,7 +150,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Guardar Mascota"
-        android:backgroundTint="#44A499"
+        android:backgroundTint="@color/colorPrimary"
+        android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

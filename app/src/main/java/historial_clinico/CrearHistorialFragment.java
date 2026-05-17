@@ -69,14 +69,13 @@ public class CrearHistorialFragment extends Fragment {
             String tipoSeleccionado = binding.spinnerTipo.getText().toString().trim();
             String fecha = binding.etFecha.getText().toString().trim();
             String desc = binding.etDescripcion.getText().toString().trim();
-            String notas = binding.etNotas.getText().toString().trim();
 
             if (fecha.isEmpty() || desc.isEmpty()) {
                 Toast.makeText(getContext(), "Rellena los campos obligatorios", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            HistorialMedico nuevoRegistro = new HistorialMedico(mascotaId, tipoSeleccionado, fecha, desc, notas);
+            HistorialMedico nuevoRegistro = new HistorialMedico(mascotaId, tipoSeleccionado, fecha, desc);
 
             String token = "Bearer " + prefs.getToken();
             viewModel.crearRegistro(token, nuevoRegistro).observe(getViewLifecycleOwner(), resource -> {

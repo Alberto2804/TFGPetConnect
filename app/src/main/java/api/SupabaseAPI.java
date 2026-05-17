@@ -100,7 +100,7 @@ public interface SupabaseAPI {
     @PATCH("rest/v1/mascotas")
     Call<Void> actualizarMascotaDB(
             @Header("Authorization") String token,
-            @Query("user_id") String filtroUserId,
+            @Query("id") String filtroId,
             @Body com.google.gson.JsonObject datosActualizados
     );
 
@@ -148,5 +148,17 @@ public interface SupabaseAPI {
     retrofit2.Call<Void> cambiarContrasenaAuth(
             @retrofit2.http.Header("Authorization") String token,
             @retrofit2.http.Body com.google.gson.JsonObject nuevosDatosAuth
+    );
+
+    @retrofit2.http.DELETE("rest/v1/usuarios")
+    retrofit2.Call<Void> borrarUsuarioDB(
+            @retrofit2.http.Header("Authorization") String token,
+            @retrofit2.http.Query("id") String idUsuarioABorrar
+    );
+
+    @GET("rest/v1/usuarios")
+    Call<List<JsonObject>> obtenerTodosLosUsuarios(
+            @Header("Authorization") String token,
+            @Query("select") String columnas
     );
 }
