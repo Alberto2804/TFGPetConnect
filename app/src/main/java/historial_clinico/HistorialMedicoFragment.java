@@ -10,18 +10,15 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-
 import es.iesagora.proyectopetconnect.databinding.FragmentHistorialMedicoBinding;
 import sharedpreferences.PreferencesRepository;
-import historial_clinico.HistorialViewModel;
-
 
 public class HistorialMedicoFragment extends Fragment {
 
     private FragmentHistorialMedicoBinding binding;
     private HistorialViewModel viewModel;
     private HistorialAdapter adapter;
-    private String mascotaId; // Deberás pasarlo por Bundle
+    private String mascotaId;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -33,55 +30,80 @@ public class HistorialMedicoFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Recuperamos el ID de la mascota que se seleccionó
+        PreferencesRepository prefs = new PreferencesRepository(requireContext());
+        viewModel = new ViewModelProvider(requireActivity()).get(HistorialViewModel.class);
+
+        // Recuperamos el ID de la mascota
         if (getArguments() != null) {
             mascotaId = getArguments().getString("mascota_id");
         }
-
-        PreferencesRepository prefs = new PreferencesRepository(requireContext());
-        mascotaId = prefs.getMascotaActivaId();
-
-        viewModel = new ViewModelProvider(this).get(HistorialViewModel.class);
+        if (mascotaId == null) {
+            mascotaId = prefs.getMascotaActivaId();
+        }
 
 
-        adapter = new HistorialAdapter();
+        // Inicializamos el adaptador pasándole la acción de borrar
+        adapter = new HistorialAdapter(registroId -> {
+
+            // OJO AQUÍ: Supabase siempre necesita el "Bearer " delante del token para autorizar el borrado
+            String token = "Bearer " + prefs.getToken();
+
+            // Llamamos al ViewModel para borrar el registro
+            viewModel.borrarRegistro(token, registroId).observe(getViewLifecycleOwner(), resource -> {
+                if (resource.status == api.Resource.Status.SUCCESS) {
+                    android.widget.Toast.makeText(getContext(), "Registro borrado", android.widget.Toast.LENGTH_SHORT).show();
+
+                    // ¡AQUÍ LLAMAMOS AL NUEVO MÉTODO PARA RECARGAR LA PANTALLA!
+                    cargarHistorial(prefs.getToken());
+
+                } else if (resource.status == api.Resource.Status.ERROR) {
+                    android.widget.Toast.makeText(getContext(), "Error al borrar", android.widget.Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
         binding.recyclerHistorial.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerHistorial.setAdapter(adapter);
 
-        viewModel.getHistorial("Bearer " + prefs.getToken(), mascotaId).observe(getViewLifecycleOwner(), resource -> {
+        // ¡AQUÍ LLAMAMOS AL MÉTODO POR PRIMERA VEZ AL ABRIR LA PANTALLA!
+        cargarHistorial(prefs.getToken());
+
+        binding.fabAddRegistro.setOnClickListener(v -> {
+            android.os.Bundle bundle = new android.os.Bundle();
+            bundle.putString("mascota_id", mascotaId);
+            androidx.navigation.Navigation.findNavController(v)
+                    .navigate(es.iesagora.proyectopetconnect.R.id.action_historialMedicoFragment_to_crearHistorialFragment, bundle);
+        });
+    }
+
+    // =========================================================
+    // ESTE ES EL MÉTODO NUEVO QUE HEMOS EXTRAÍDO
+    // =========================================================
+    private void cargarHistorial(String tokenPuro) {
+        viewModel.getHistorial("Bearer " + tokenPuro, mascotaId).observe(getViewLifecycleOwner(), resource -> {
             if (resource != null) {
                 switch (resource.status) {
                     case LOADING:
-                        // Mostramos el círculo de carga
                         binding.progressBarHistorial.setVisibility(View.VISIBLE);
                         break;
-
                     case SUCCESS:
-                        // Ocultamos el círculo al terminar con éxito
                         binding.progressBarHistorial.setVisibility(View.GONE);
                         if (resource.data != null) {
-                            adapter.setLista(resource.data);
+                            adapter.setLista(resource.data); // Pinta la lista nueva (sin el borrado)
                         }
                         break;
-
                     case ERROR:
-                        // Ocultamos el círculo y mostramos el error
                         binding.progressBarHistorial.setVisibility(View.GONE);
+                        android.widget.Toast.makeText(getContext(), "Error cargando historial", android.widget.Toast.LENGTH_SHORT).show();
                         break;
                 }
             }
         });
+    }
 
-        binding.fabAddRegistro.setOnClickListener(v -> {
-            // 1. Creamos la "mochila" de datos
-            android.os.Bundle bundle = new android.os.Bundle();
-
-            // 2. Metemos el ID de la mascota actual para que el formulario sepa a quién guardarle el registro
-            bundle.putString("mascota_id", mascotaId);
-
-            // 3. Viajamos a la pantalla de Crear Registro usando la acción de tu nav_graph
-            androidx.navigation.Navigation.findNavController(v)
-                    .navigate(es.iesagora.proyectopetconnect.R.id.action_historialMedicoFragment_to_crearHistorialFragment, bundle);
-        });
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }

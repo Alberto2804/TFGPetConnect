@@ -51,7 +51,7 @@ public class AgendaFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        viewModel = new ViewModelProvider(this).get(AgendaViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(AgendaViewModel.class);
 
         // Pedir permiso de notificaciones para Android 13+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
@@ -65,7 +65,21 @@ public class AgendaFragment extends Fragment {
         rvCitasDia = view.findViewById(R.id.rvCitasDia);
         fabAnadirCita = view.findViewById(R.id.fabAnadirCita); // Instanciamos el botón +
 
-        adapter = new AgendaAdapter(new ArrayList<>());
+        // Inicializamos el adaptador pasándole la lista vacía Y la acción de borrar
+        adapter = new AgendaAdapter(new ArrayList<>(), citaId -> {
+
+            // Cuando el adaptador nos avisa de que han pulsado la papelera y confirmado, llamamos al ViewModel
+            viewModel.borrarCita(citaId).observe(getViewLifecycleOwner(), resource -> {
+                if (resource.status == api.Resource.Status.SUCCESS) {
+                    android.widget.Toast.makeText(getContext(), "Cita borrada", android.widget.Toast.LENGTH_SHORT).show();
+
+                    cargarCitasGlobales();
+
+                } else if (resource.status == api.Resource.Status.ERROR) {
+                    android.widget.Toast.makeText(getContext(), "Error al borrar", android.widget.Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
         rvCitasDia.setLayoutManager(new LinearLayoutManager(getContext()));
         rvCitasDia.setAdapter(adapter);
 

@@ -53,7 +53,7 @@ public class CrearHistorialFragment extends Fragment {
         String[] opciones = {"Vacuna", "Desparasitación", "Visita", "Cirugía", "Medicación"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 requireContext(),
-                android.R.layout.simple_spinner_item,
+                android.R.layout.simple_dropdown_item_1line,
                 opciones
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -66,7 +66,7 @@ public class CrearHistorialFragment extends Fragment {
 
         // 3. CONFIGURAR EL BOTÓN DE GUARDAR
         binding.btnGuardarRegistro.setOnClickListener(v -> {
-            String tipoSeleccionado = binding.spinnerTipo.getSelectedItem().toString();
+            String tipoSeleccionado = binding.spinnerTipo.getText().toString().trim();
             String fecha = binding.etFecha.getText().toString().trim();
             String desc = binding.etDescripcion.getText().toString().trim();
             String notas = binding.etNotas.getText().toString().trim();

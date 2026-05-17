@@ -23,4 +23,8 @@ public class HistorialViewModel extends AndroidViewModel {
     public LiveData<Resource<Void>> crearRegistro(String token, HistorialMedico registro) {
         return repository.insertarRegistro(token, registro);
     }
+
+    public LiveData<Resource<Void>> borrarRegistro(String token, String registroId) {
+        return repository.eliminarRegistro(token, registroId);
+    }
 }

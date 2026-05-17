@@ -28,6 +28,7 @@ public class AppFragment extends Fragment {
     private FragmentAppBinding binding;
     private UserViewModel userViewModel;
     private PreferencesRepository prefs;
+    private JsonObject mascotaActualActiva;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -39,7 +40,7 @@ public class AppFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
         prefs = new PreferencesRepository(requireContext());
 
         binding.btnSettings.setOnClickListener(v ->
@@ -47,7 +48,6 @@ public class AppFragment extends Fragment {
         );
         binding.cardLugares.setOnClickListener(v -> abrirGoogleMaps());
 
-        // Al pulsar en Agenda, navegamos al fragmento de la agenda
         binding.cardAgenda.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(R.id.action_appFragment_to_agendaFragment)
         );
@@ -59,14 +59,22 @@ public class AppFragment extends Fragment {
                         binding.tvNombre.setText(resource.data.get("usuario").getAsString());
                     }
                 }
+                else if (resource.status == Resource.Status.ERROR) {
+                    Toast.makeText(getContext(), "Sesión inválida o expirada", Toast.LENGTH_SHORT).show();
+                    prefs.cerrarSesion();
+                    android.content.Intent intent = new android.content.Intent(requireActivity(), auth.AuthActivity.class);
+                    startActivity(intent);
+                    requireActivity().finish();
+                }
             }
         });
 
         cargarMascotas();
+        obtenerUbicacionYClima();
 
-        // Busca el cardMascota que es el que dice "Mi Mascota - Ver Perfil"
+        // 🚀 CARGA CERO: Pasamos los datos calientes en el Bundle al pulsar ver perfil
         binding.cardMascota.setOnClickListener(v -> {
-            // Solo navegamos si hay una mascota seleccionada
+            // 🚀 CARGA LIMPIA: No pasamos ningún bundle gigante. Solo navegamos.
             if (prefs.getMascotaActivaId() != null) {
                 Navigation.findNavController(v).navigate(R.id.action_appFragment_to_detalleMascotaFragment);
             } else {
@@ -106,6 +114,7 @@ public class AppFragment extends Fragment {
                             }
                         }
 
+                        mascotaActualActiva = mascotaAMostrar; // Sincronizamos
                         prefs.guardarMascotaActivaId(mascotaAMostrar.get("id").getAsString());
                         pintarMascotaEnTarjeta(mascotaAMostrar);
 
@@ -120,16 +129,11 @@ public class AppFragment extends Fragment {
     }
 
     private void pintarMascotaEnTarjeta(JsonObject mascota) {
-        String idMascota = mascota.get("id").getAsString();
         String nombre = mascota.has("nombre") && !mascota.get("nombre").isJsonNull() ? mascota.get("nombre").getAsString() : "Sin nombre";
         String raza = mascota.has("raza") && !mascota.get("raza").isJsonNull() ? mascota.get("raza").getAsString() : "";
-        String animal = mascota.has("animal") && !mascota.get("animal").isJsonNull() ? mascota.get("animal").getAsString() : "";
         String fechaNacimiento = mascota.has("fecha_nacimiento") && !mascota.get("fecha_nacimiento").isJsonNull() ? mascota.get("fecha_nacimiento").getAsString() : "";
-        String sexo = mascota.has("sexo") && !mascota.get("sexo").isJsonNull() ? mascota.get("sexo").getAsString() : "";
-        String peso = mascota.has("peso") && !mascota.get("peso").isJsonNull() ? mascota.get("peso").getAsString() : "";
         String urlFoto = mascota.has("foto_url") && !mascota.get("foto_url").isJsonNull() ? mascota.get("foto_url").getAsString() : "";
 
-        // Calculamos la edad usando el ViewModel
         String edadCalculada = userViewModel.calcularEdad(fechaNacimiento);
 
         binding.tvNombreMascota.setText(nombre);
@@ -138,23 +142,10 @@ public class AppFragment extends Fragment {
         Glide.with(this)
                 .load(urlFoto)
                 .centerCrop()
-                .placeholder(R.drawable.goldenretriever)
-                .error(R.drawable.goldenretriever)
+                .placeholder(R.drawable.ic_foto)
+                .error(R.drawable.ic_foto)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(binding.imgMascota);
-
-        // Preparamos el bundle para cuando se pulse en editar dentro del menú
-        Bundle bundleEdicion = new Bundle();
-        bundleEdicion.putString("mascota_id", idMascota);
-        bundleEdicion.putString("nombre", nombre);
-        bundleEdicion.putString("animal", animal);
-        bundleEdicion.putString("raza", raza);
-        bundleEdicion.putString("fecha_nacimiento", fechaNacimiento);
-        bundleEdicion.putString("sexo", sexo);
-        bundleEdicion.putString("peso", peso);
-        bundleEdicion.putString("urlFoto", urlFoto);
-
-        // Si quieres añadir un botón "Editar" en el selector en el futuro, le pasas este bundleEdicion.
     }
 
     private void mostrarSelectorMascotas(List<JsonObject> listaMascotas) {
@@ -171,9 +162,10 @@ public class AppFragment extends Fragment {
                     if (which == listaMascotas.size()) {
                         Navigation.findNavController(requireView()).navigate(R.id.action_appFragment_to_crearMascotaFragment);
                     } else {
-                        String nuevoId = listaMascotas.get(which).get("id").getAsString();
-                        prefs.guardarMascotaActivaId(nuevoId);
-                        pintarMascotaEnTarjeta(listaMascotas.get(which));
+                        JsonObject seleccionada = listaMascotas.get(which);
+                        mascotaActualActiva = seleccionada; // Actualizamos la activa al cambiar
+                        prefs.guardarMascotaActivaId(seleccionada.get("id").getAsString());
+                        pintarMascotaEnTarjeta(seleccionada);
                         Toast.makeText(getContext(), "Cambiado a " + opciones[which], Toast.LENGTH_SHORT).show();
                     }
                 })
@@ -190,6 +182,75 @@ public class AppFragment extends Fragment {
             android.net.Uri webUri = android.net.Uri.parse("http://maps.google.com/maps?q=veterinarios,parques");
             startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, webUri));
         }
+    }
+
+    private void obtenerUbicacionYClima() {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+            }, 102);
+            return;
+        }
+
+        android.location.LocationManager locationManager = (android.location.LocationManager) requireContext().getSystemService(android.content.Context.LOCATION_SERVICE);
+        if (locationManager != null) {
+            android.location.Location location = locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER);
+            if (location == null) {
+                location = locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER);
+            }
+
+            if (location != null) {
+                cargarConsejoDelClima(location.getLatitude(), location.getLongitude());
+            } else {
+                cargarConsejoDelClima(39.47, -6.37);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @androidx.annotation.NonNull String[] permissions, @androidx.annotation.NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 102 && grantResults.length > 0 && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            obtenerUbicacionYClima();
+        }
+    }
+
+    private void cargarConsejoDelClima(double latitud, double longitud) {
+        api.WeatherClient.getApi().getCurrentWeather(latitud, longitud, true)
+                .enqueue(new retrofit2.Callback<com.google.gson.JsonObject>() {
+                    @Override
+                    public void onResponse(retrofit2.Call<com.google.gson.JsonObject> call, retrofit2.Response<com.google.gson.JsonObject> response) {
+                        if (binding == null || !isAdded() || getContext() == null) return;
+                        if (response.isSuccessful() && response.body() != null) {
+                            try {
+                                com.google.gson.JsonObject current = response.body().getAsJsonObject("current_weather");
+                                double temp = current.get("temperature").getAsDouble();
+                                int weatherCode = current.get("weathercode").getAsInt();
+
+                                binding.tvClimaTemp.setText(temp + " ºC en tu zona");
+
+                                if (weatherCode >= 51 && weatherCode <= 99) {
+                                    binding.tvClimaConsejo.setText("Día lluvioso. Si sales, seca bien sus patas y orejas al volver para evitar hongos.");
+                                    binding.ivClimaIcono.setImageResource(R.drawable.ic_lluvia);
+                                } else if (temp >= 30) {
+                                    binding.tvClimaConsejo.setText("¡Alerta por calor! Riesgo de golpe de calor. Renueva el agua constantemente.");
+                                    binding.ivClimaIcono.setImageResource(R.drawable.icono_calor);
+                                } else if (temp <= 8) {
+                                    binding.tvClimaConsejo.setText("Bajas temperaturas. Protege los hábitats de tus mascotas de corrientes de aire.");
+                                    binding.ivClimaIcono.setImageResource(R.drawable.icono_frio);
+                                } else {
+                                    binding.tvClimaConsejo.setText("Clima excelente. Aprovecha para pasear o jugar al aire libre sin preocupaciones.");
+                                    binding.ivClimaIcono.setImageResource(R.drawable.icono_ideal);
+                                }
+                            } catch (Exception e) {
+                                binding.tvClimaTemp.setText("Clima no disponible");
+                            }
+                        }
+                    }
+                    @Override
+                    public void onFailure(retrofit2.Call<com.google.gson.JsonObject> call, Throwable t) {}
+                });
     }
 
     @Override

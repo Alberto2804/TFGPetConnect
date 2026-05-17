@@ -31,4 +31,8 @@ public class AgendaViewModel extends AndroidViewModel {
     public LiveData<Resource<List<JsonObject>>> getCitasUsuario() {
         return repository.obtenerCitas(prefs.getToken(), prefs.getUserId());
     }
+
+    public LiveData<Resource<Void>> borrarCita(String citaId) {
+        return repository.eliminarCita(prefs.getToken(), citaId);
+    }
 }

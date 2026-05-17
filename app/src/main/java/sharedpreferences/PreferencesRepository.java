@@ -49,4 +49,13 @@ public class PreferencesRepository {
     public void cerrarSesion() {
         prefs.edit().clear().apply();
     }
+
+    public void guardarDatosPerfil(String nombre, String fotoUrl) {
+        prefs.edit().putString("user_name", nombre).apply();
+        prefs.edit().putString("user_photo", fotoUrl).apply();
+    }
+
+
+    public String getNombrePerfil() { return prefs.getString("user_name", "Usuario"); }
+    public String getFotoPerfil() { return prefs.getString("user_photo", ""); }
 }

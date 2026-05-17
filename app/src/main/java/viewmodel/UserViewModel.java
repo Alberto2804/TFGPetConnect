@@ -43,27 +43,21 @@ public class UserViewModel extends AndroidViewModel {
         return userRepository.obtenerPerfil(token, userId);
     }
 
-    public LiveData<Resource<Void>> actualizarPerfil(String nuevoNombre, File archivoFoto) {
+    public LiveData<Resource<Void>> actualizarPerfilDB(String nuevoNombre, String urlFoto) {
         String token = prefsRepo.getToken();
         String userId = prefsRepo.getUserId();
-
-        if (token.isEmpty() || userId.isEmpty()) {
-            MutableLiveData<Resource<Void>> error = new MutableLiveData<>();
-            error.setValue(Resource.error("Sesión no válida", null));
-            return error;
-        }
-
-        if (archivoFoto != null) {
-            return userRepository.subirFotoPerfil(token, userId, archivoFoto);
-        } else {
-            return userRepository.actualizarNombre(token, userId, nuevoNombre);
-        }
+        return userRepository.actualizarDatosUsuario(token, userId, nuevoNombre, urlFoto);
     }
 
-    public LiveData<Resource<Void>> actualizarSoloNombre(String nuevoNombre) {
+    public LiveData<Resource<String>> subirFotoPerfil(File archivoFoto) {
         String token = prefsRepo.getToken();
         String userId = prefsRepo.getUserId();
-        return userRepository.actualizarNombre(token, userId, nuevoNombre);
+        return userRepository.subirFotoPerfil(token, userId, archivoFoto);
+    }
+
+    public LiveData<Resource<Void>> cambiarContrasena(String nuevaContrasena) {
+        String token = prefsRepo.getToken();
+        return userRepository.actualizarContrasena(token, nuevaContrasena);
     }
 
     public void setModoOscuro(boolean isOscuro) {
@@ -110,6 +104,11 @@ public class UserViewModel extends AndroidViewModel {
     public LiveData<Resource<Void>> editarMascota(String mascotaId, String nombre, String animal, String raza, String fechaNacimiento, String sexo, String peso, String fotoUrl) {
         String token = prefsRepo.getToken();
         return userRepository.actualizarMascota(token, mascotaId, nombre, animal, raza, fechaNacimiento, sexo, peso, fotoUrl);
+    }
+
+    public LiveData<Resource<Void>> borrarMascota(String mascotaId) {
+        String token = prefsRepo.getToken();
+        return userRepository.eliminarMascota(token, mascotaId);
     }
 
     // ==========================================

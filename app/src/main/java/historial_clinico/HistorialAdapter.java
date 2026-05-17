@@ -17,6 +17,17 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.View
 
     private List<HistorialMedico> lista = new ArrayList<>();
 
+    // 1. NUEVA INTERFAZ PARA AVISAR AL FRAGMENTO
+    public interface OnRegistroDeleteListener {
+        void onDeleteClick(String registroId);
+    }
+    private OnRegistroDeleteListener deleteListener;
+
+    // 2. NUEVO CONSTRUCTOR PARA RECIBIR EL LISTENER
+    public HistorialAdapter(OnRegistroDeleteListener listener) {
+        this.deleteListener = listener;
+    }
+
     public void setLista(List<HistorialMedico> nuevaLista) {
         this.lista = nuevaLista;
         notifyDataSetChanged();
@@ -43,7 +54,22 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.View
             case "Medicación": holder.ivIcono.setImageResource(R.drawable.ic_medicacion); break;
             case "Desparasitación": holder.ivIcono.setImageResource(R.drawable.ic_desparasitacion); break;
             case "Visita": holder.ivIcono.setImageResource(R.drawable.ic_visita); break;
+            default: holder.ivIcono.setImageResource(R.drawable.ic_visita); break; // Por si acaso
         }
+
+        // 3. PROGRAMAR EL CLICK DE LA PAPELERA
+        holder.btnBorrar.setOnClickListener(v -> {
+            new android.app.AlertDialog.Builder(v.getContext())
+                    .setTitle("Borrar Registro")
+                    .setMessage("¿Eliminar este registro médico de forma permanente?")
+                    .setPositiveButton("Eliminar", (dialog, which) -> {
+                        if (deleteListener != null) {
+                            deleteListener.onDeleteClick(String.valueOf(h.getId()));
+                        }
+                    })
+                    .setNegativeButton("Cancelar", null)
+                    .show();
+        });
     }
 
     @Override
@@ -51,13 +77,16 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.View
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvTipo, tvFecha, tvDesc;
-        ImageView ivIcono;
+        ImageView ivIcono, btnBorrar; // Añadido el btnBorrar
+
         ViewHolder(View v) {
             super(v);
             tvTipo = v.findViewById(R.id.tvTipoRegistro);
             tvFecha = v.findViewById(R.id.tvFechaRegistro);
             tvDesc = v.findViewById(R.id.tvDescripcionRegistro);
             ivIcono = v.findViewById(R.id.ivIconoMedico);
+            // 4. VINCULAMOS LA PAPELERA DEL XML
+            btnBorrar = v.findViewById(R.id.btnBorrarRegistro);
         }
     }
 }

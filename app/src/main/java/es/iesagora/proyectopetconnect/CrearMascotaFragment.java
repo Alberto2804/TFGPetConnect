@@ -26,6 +26,7 @@ import java.util.Calendar;
 
 import api.Resource;
 import es.iesagora.proyectopetconnect.databinding.FragmentCrearMascotaBinding;
+import sharedpreferences.PreferencesRepository;
 import viewmodel.UserViewModel;
 
 public class CrearMascotaFragment extends Fragment {
@@ -36,6 +37,7 @@ public class CrearMascotaFragment extends Fragment {
     private boolean esModoEdicion = false;
     private String urlFotoActual = null;
     private String idMascotaEditar = null;
+    private PreferencesRepository prefs;
 
     private final ActivityResultLauncher<String> selectorImagenLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -54,7 +56,11 @@ public class CrearMascotaFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+
+        // ✅ ESTE ES EL CAMBIO QUE ARREGLA TODO EL PARPADEO
+        userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
+
+        prefs = new sharedpreferences.PreferencesRepository(requireContext());
 
         configurarDesplegables();
         configurarCalendario();

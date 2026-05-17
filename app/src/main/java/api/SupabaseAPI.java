@@ -123,4 +123,30 @@ public interface SupabaseAPI {
 
     @GET("rest/v1/citas")
     Call<java.util.List<com.google.gson.JsonObject>> obtenerCitasUsuario(@Header("Authorization") String token, @Query("user_id") String userId);
+
+    // --- MÉTODOS PARA BORRAR ---
+    @retrofit2.http.DELETE("rest/v1/mascotas")
+    retrofit2.Call<Void> borrarMascotaDB(
+            @retrofit2.http.Header("Authorization") String token,
+            @retrofit2.http.Query("id") String filtroId
+    );
+
+    @retrofit2.http.DELETE("rest/v1/historial_clinico")
+    retrofit2.Call<Void> borrarRegistroHistorialDB(
+            @retrofit2.http.Header("Authorization") String token,
+            @retrofit2.http.Query("id") String filtroId
+    );
+
+    @retrofit2.http.DELETE("rest/v1/citas")
+    retrofit2.Call<Void> borrarCitaDB(
+            @retrofit2.http.Header("Authorization") String token,
+            @retrofit2.http.Query("id") String filtroId
+    );
+
+    // --- ACTUALIZAR CONTRASEÑA EN AUTH ---
+    @retrofit2.http.PUT("auth/v1/user")
+    retrofit2.Call<Void> cambiarContrasenaAuth(
+            @retrofit2.http.Header("Authorization") String token,
+            @retrofit2.http.Body com.google.gson.JsonObject nuevosDatosAuth
+    );
 }

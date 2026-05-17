@@ -13,7 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import java.io.File;
@@ -30,6 +29,7 @@ public class AjustesFragment extends Fragment {
 
     private FragmentAjustesBinding binding;
     private UserViewModel userViewModel;
+    private sharedpreferences.PreferencesRepository prefs;
 
     private ActivityResultLauncher<String> selectorImagenLauncher;
     private Uri nuevaFotoUri = null;
@@ -58,20 +58,22 @@ public class AjustesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
-        sharedpreferences.PreferencesRepository prefs = new sharedpreferences.PreferencesRepository(requireContext());
+        // ✅ ESTE ES EL CAMBIO QUE ARREGLA TODO EL PARPADEO
+        userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
+
+        prefs = new sharedpreferences.PreferencesRepository(requireContext());
         String userId = prefs.getUserId();
 
-
-        String urlFoto = "https://evrsywohqxoehdnbhpkg.supabase.co/storage/v1/object/public/avatares/" + userId + ".jpg?t=" + System.currentTimeMillis();
+        // Construimos la URL estática limpia sin timestamps destructores de caché
+        String urlFoto = "https://evrsywohqxoehdnbhpkg.supabase.co/storage/v1/object/public/avatares/" + userId + ".jpg";
 
         com.bumptech.glide.Glide.with(this)
                 .load(urlFoto)
                 .circleCrop()
-                .skipMemoryCache(true)
-                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL) // 🚀 Activamos la caché nativa
                 .into(binding.ivFotoPerfil);
 
+        // Como el Repositorio guarda el perfil en RAM, este observador responde al instante (0ms)
         userViewModel.getPerfilUsuario().observe(getViewLifecycleOwner(), resource -> {
             if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
                 if (resource.data.has("usuario") && !resource.data.get("usuario").isJsonNull()) {
@@ -79,19 +81,19 @@ public class AjustesFragment extends Fragment {
                 }
             }
         });
+
         boolean modoOscuroActivado = userViewModel.isModoOscuro();
         binding.switchModoOscuro.setChecked(modoOscuroActivado);
 
         binding.switchModoOscuro.setOnCheckedChangeListener((buttonView, isChecked) -> {
-
             userViewModel.setModoOscuro(isChecked);
-
             if (isChecked) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             }
         });
+
         binding.btnCambiarFoto.setOnClickListener(v -> selectorImagenLauncher.launch("image/*"));
         binding.btnGuardarPerfil.setOnClickListener(v -> guardarCambios());
         binding.btnLogout.setOnClickListener(v -> hacerLogout());
@@ -110,58 +112,45 @@ public class AjustesFragment extends Fragment {
 
         File archivoFoto = (nuevaFotoUri != null) ? uriToFile(nuevaFotoUri) : null;
 
-        userViewModel.actualizarPerfil(nuevoNombre, archivoFoto).observe(getViewLifecycleOwner(), resource -> {
-            if (resource != null) {
-                switch (resource.status) {
+        if (archivoFoto != null) {
+            userViewModel.subirFotoPerfil(archivoFoto).observe(getViewLifecycleOwner(), resourceUrl -> {
+                switch (resourceUrl.status) {
                     case LOADING:
                         break;
                     case SUCCESS:
-                        if (archivoFoto != null) {
-                            actualizarNombrePostFoto(nuevoNombre);
-                            nuevaFotoUri = null;
-                        } else {
-                            Toast.makeText(getContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show();
-                            restaurarBoton();
-                        }
+                        String urlPublica = resourceUrl.data;
+                        actualizarDatos(nuevoNombre, urlPublica);
+                        nuevaFotoUri = null;
                         break;
                     case ERROR:
-                        Toast.makeText(getContext(), resource.message, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Error subiendo la foto", Toast.LENGTH_SHORT).show();
                         restaurarBoton();
                         break;
                 }
-            }
-        });
+            });
+        } else {
+            actualizarDatos(nuevoNombre, null);
+        }
     }
 
-    private void actualizarNombrePostFoto(String nuevoNombre) {
-        userViewModel.actualizarSoloNombre(nuevoNombre).observe(getViewLifecycleOwner(), resource -> {
-            if (resource != null && resource.status == Resource.Status.SUCCESS) {
-                Toast.makeText(getContext(), "Foto y nombre actualizados", Toast.LENGTH_SHORT).show();
+    private void actualizarDatos(String nombre, String urlFoto) {
+        userViewModel.actualizarPerfilDB(nombre, urlFoto).observe(getViewLifecycleOwner(), resource -> {
+            if (resource.status == api.Resource.Status.SUCCESS) {
+                Toast.makeText(getContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show();
                 restaurarBoton();
-            } else if (resource != null && resource.status == Resource.Status.ERROR) {
-                Toast.makeText(getContext(), "Foto subida, pero error en nombre: " + resource.message, Toast.LENGTH_SHORT).show();
+            } else if (resource.status == api.Resource.Status.ERROR) {
+                Toast.makeText(getContext(), resource.message, Toast.LENGTH_SHORT).show();
                 restaurarBoton();
             }
         });
     }
 
     private void hacerLogout() {
-        // 1. Ejecutamos la lógica de tu ViewModel (si la tienes)
         userViewModel.hacerLogout();
-
-        // 2. Limpiamos los datos usando tu PreferencesRepository
-        sharedpreferences.PreferencesRepository prefs = new sharedpreferences.PreferencesRepository(requireContext());
         prefs.cerrarSesion();
-
-        // 3. Viajamos a la AuthActivity (Pantalla de Login) con un Intent
         android.content.Intent intent = new android.content.Intent(requireContext(), AuthActivity.class);
-
-        // 4. Estos Flags borran el historial para que el usuario no pueda darle al botón "Atrás"
         intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
-
         startActivity(intent);
-
-        // 5. Destruimos la MainActivity
         requireActivity().finish();
     }
 
